@@ -10,6 +10,7 @@ export const POST: APIRoute = async (context) => {
 
     const formData = await request.formData();
     const provider = formData.get("provider")?.toString();
+    const next = formData.get("next")?.toString() || "/dashboard";
 
     if (provider) {
         const supabase = createAstroSupabase(context);
@@ -17,8 +18,8 @@ export const POST: APIRoute = async (context) => {
             provider: provider as Provider,
             options: {
                 redirectTo: import.meta.env.DEV
-                    ? "http://localhost:4321/api/auth/callback"
-                    : "https://tarjuman.org/api/auth/callback",
+                    ? `http://localhost:4321/api/auth/callback?next=${next}`
+                    : `https://tarjuman.org/api/auth/callback?next=${next}`,
             },
         });
 

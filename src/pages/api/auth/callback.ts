@@ -4,17 +4,20 @@ import type { APIRoute } from "astro";
 export const GET: APIRoute = async (context) => {
     const { url, redirect } = context;
     const authCode = url.searchParams.get("code");
+    const next = url.searchParams.get("next") || "/dashboard";
 
     if (!authCode) {
         return new Response("No code provided", { status: 400 });
     }
 
     const supabase = createAstroSupabase(context);
-    const { error } = await supabase.auth.exchangeCodeForSession(authCode);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(authCode);
 
     if (error) {
-        return new Response(error.message, { status: 500 });
+        console.error("Auth error:", error);
+        return redirect("/login?error=auth_failed");
     }
 
-    return redirect("/dashboard");
+    console.log("Session exchanged successfully for user:", data.session?.user.email);
+    return redirect(next);
 };

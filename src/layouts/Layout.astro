@@ -1,5 +1,12 @@
 ---
 import "../styles/global.css";
+import UserMenu from "../components/UserMenu.svelte";
+import { createAstroSupabase } from "../lib/supabase";
+
+const supabase = createAstroSupabase(Astro);
+const {
+	data: { user },
+} = await supabase.auth.getUser();
 ---
 
 <html lang="en">
@@ -11,8 +18,39 @@ import "../styles/global.css";
 		<meta name="generator" content={Astro.generator} />
 		<title>{Astro.props.title || "Tarjuman"}</title>
 	</head>
-	<body>
-		<slot />
+	<body
+		class="flex min-h-screen flex-col bg-background font-sans antialiased text-foreground"
+	>
+		<header
+			class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+		>
+			<div
+				class="container mx-auto flex h-16 items-center justify-between px-4"
+			>
+				<a href="/" class="flex items-center gap-2">
+					<span class="text-xl font-serif font-bold">Tarjuman</span>
+				</a>
+				<nav class="flex items-center gap-6">
+					<UserMenu client:load initialUser={user} />
+				</nav>
+			</div>
+		</header>
+
+		<main class="flex-1">
+			<slot />
+		</main>
+
+		<footer class="border-t py-6 md:py-0">
+			<div
+				class="container mx-auto flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row px-4"
+			>
+				<p
+					class="text-center text-sm leading-loose text-muted-foreground md:text-left"
+				>
+					&copy; 2024 Tarjuman. All rights reserved.
+				</p>
+			</div>
+		</footer>
 	</body>
 </html>
 

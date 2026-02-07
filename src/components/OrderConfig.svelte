@@ -19,18 +19,68 @@
     import { fade, slide } from "svelte/transition";
 
     let isLoading = false;
+    let isResuming = false;
+    // Check immediately if we are in the "returning" state to show overlay
+    let isReturning = false;
+    if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        isReturning = params.get("checkout_return") === "true";
+    }
 
     onMount(async () => {
         try {
+            console.log("OrderConfig mounted. Checking for saved state...");
             const savedState = await restoreOrderState();
+
             if (savedState && savedState.files.length > 0) {
-                // Restore state if found
                 console.log("Restoring saved order state", savedState);
                 orderStore.set(savedState);
-                await clearOrderState();
+                // DO NOT clear state here. Only clear on success.
+
+                // Check if user is now logged in
+                const {
+                    data: { user },
+                } = await supabase.auth.getUser();
+
+                if (isReturning) {
+                    if (user) {
+                        console.log("Auto-resuming checkout for user", user.id);
+
+                        // Clean the URL immediately
+                        window.history.replaceState({}, document.title, "/");
+
+                        isLoading = true;
+                        // Short delay to ensure state is settled and UI is ready
+                        setTimeout(() => {
+                            handleCheckout();
+                        }, 500);
+                    } else {
+                        console.warn(
+                            "Returned from checkout but no user found (auth failed?). Resetting UI.",
+                        );
+                        // Fail safe: Stop the overlay if auth failed
+                        isReturning = false;
+                        window.history.replaceState({}, document.title, "/");
+                    }
+                }
+            } else {
+                console.log("No saved state found.");
+                if (isReturning) {
+                    console.warn(
+                        "Returned from checkout but no saved state found. Resetting UI.",
+                    );
+                    // Fail safe: Stop the overlay if state validation failed
+                    isReturning = false;
+                    window.history.replaceState({}, document.title, "/");
+                }
             }
         } catch (e) {
             console.error("Failed to restore state", e);
+            // Fail safe for error
+            if (isReturning) {
+                isReturning = false;
+                window.history.replaceState({}, document.title, "/");
+            }
         }
     });
 
@@ -44,19 +94,14 @@
             } = await supabase.auth.getUser();
 
             if (!user) {
-                // User not logged in, save state and redirect to login
                 console.log(
-                    "User not logged in, saving state and redirecting...",
+                    "User not logged in, saving state and redirecting to login...",
                 );
                 await saveOrderState($orderStore);
-                const { error } = await supabase.auth.signInWithOAuth({
-                    provider: "google",
-                    options: {
-                        redirectTo: window.location.href, // Redirect back to this page
-                    },
-                });
-                if (error) throw error;
-                return; // Redirecting...
+                // Add checkout_return param to know we came from here
+                const returnUrl = encodeURIComponent("/?checkout_return=true");
+                window.location.href = `/login?next=${returnUrl}`;
+                return;
             }
 
             console.log("Creating order for user:", user.id);
@@ -136,6 +181,28 @@
         }).format(price);
     }
 </script>
+
+{#if isReturning || isLoading}
+    <!-- Full Screen Overlay for Processing -->
+    <div
+        class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm"
+        transition:fade
+    >
+        <div
+            class="flex flex-col items-center gap-4 p-8 text-center animate-in zoom-in-95 duration-300"
+        >
+            <Loader2 class="h-16 w-16 animate-spin text-primary" />
+            <div class="space-y-2">
+                <h3 class="text-2xl font-bold tracking-tight">
+                    Memproses Pesanan...
+                </h3>
+                <p class="text-muted-foreground">
+                    Mohon jangan tutup halaman ini.
+                </p>
+            </div>
+        </div>
+    </div>
+{/if}
 
 <div class="p-6 sm:p-8 space-y-8">
     <!-- File List -->
@@ -352,7 +419,10 @@
                 </p>
             </div>
             <button
-                class="w-full sm:w-auto px-8 py-3 rounded-full bg-accent text-accent-foreground font-bold shadow-lg hover:bg-accent/90 transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                id="checkout-btn"
+                class="w-full sm:w-auto px-8 py-3 rounded-full bg-accent text-accent-foreground font-bold shadow-lg hover:bg-accent/90 transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed {isResuming
+                    ? 'ring-4 ring-primary ring-offset-2 animate-pulse'
+                    : ''}"
                 on:click={handleCheckout}
                 disabled={isLoading || $orderStore.files.length === 0}
             >
