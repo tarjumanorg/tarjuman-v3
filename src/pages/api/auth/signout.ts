@@ -9,5 +9,5 @@ export const POST: APIRoute = async (context) => {
         return new Response(error.message, { status: 500 });
     }
 
-    return context.redirect("/login");
+    return context.redirect("/");
 };

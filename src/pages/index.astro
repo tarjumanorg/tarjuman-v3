@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import FileDropzone from "../components/FileDropzone.svelte";
 import OrderConfig from "../components/OrderConfig.svelte";
+import MagicWorkflow from "../components/MagicWorkflow.svelte";
 ---
 
 <Layout title="Tarjuman - Jasa Penerjemah Tersumpah Resmi">
@@ -40,120 +41,113 @@ import OrderConfig from "../components/OrderConfig.svelte";
 						Study in Saudi. Diakui oleh Kedutaan Besar & Universitas
 						di Arab Saudi.
 					</p>
-
-					<!-- The Magic Box -->
-					<div
-						class="mx-auto max-w-2xl w-full rounded-2xl border bg-card p-2 shadow-2xl animate-fade-in-up delay-300"
-					>
-						<div
-							class="rounded-xl border border-dashed border-border bg-muted/30 p-8 transition-colors hover:bg-muted/50"
-						>
-							<FileDropzone client:load />
-						</div>
-					</div>
 				</div>
 
-				<!-- Configuration Section (Appears when file is uploaded) -->
-				<div class="mx-auto max-w-2xl w-full text-left mt-8">
-					<OrderConfig client:idle />
+				<!-- Magic Workflow (Dropzone -> Order Config) -->
+				<div
+					class="mx-auto w-full transition-all duration-500 ease-in-out flex justify-center"
+				>
+					<MagicWorkflow client:load />
 				</div>
 			</div>
-		</section>
 
-		<script>
-			import { orderStore } from "../stores/orderStore";
+			<script>
+				import { orderStore } from "../stores/orderStore";
 
-			const heroContent = document.getElementById("hero-content");
+				const heroContent = document.getElementById("hero-content");
 
-			orderStore.subscribe((state) => {
-				if (heroContent) {
-					if (state.files.length > 0) {
-						// Hide hero content
-						heroContent.style.opacity = "0";
-						setTimeout(() => {
-							heroContent.style.display = "none";
-						}, 500); // Wait for transition
-					} else {
-						// Show hero content
-						heroContent.style.display = "block";
-						// Small delay to allow display block to apply before opacity
-						setTimeout(() => {
-							heroContent.style.opacity = "1";
-						}, 10);
+				orderStore.subscribe((state) => {
+					if (heroContent) {
+						if (state.files.length > 0) {
+							// Hide hero content
+							heroContent.style.opacity = "0";
+							heroContent.style.visibility = "hidden";
+							heroContent.style.height = "0";
+							heroContent.style.marginBottom = "0";
+						} else {
+							// Show hero content
+							heroContent.style.visibility = "visible";
+							heroContent.style.height = "auto";
+							heroContent.style.marginBottom = "";
+							// Small delay to allow display block to apply before opacity
+							setTimeout(() => {
+								heroContent.style.opacity = "1";
+							}, 10);
+						}
 					}
-				}
-			});
-		</script>
+				});
+			</script>
+		</section>
 	</main>
-</Layout>
 
-<!-- Trust Badges -->
-<section class="border-y bg-muted/30 py-12">
-	<div class="container mx-auto px-4 text-center">
-		<p
-			class="mb-6 text-sm font-medium text-muted-foreground uppercase tracking-widest"
-		>
-			Dipercaya Oleh
-		</p>
-		<div
-			class="grid grid-cols-2 gap-8 md:grid-cols-4 opacity-70 grayscale transition-all hover:grayscale-0"
-		>
-			<div
-				class="flex items-center justify-center gap-2 p-4 rounded-lg hover:bg-background/50 transition-colors"
+	<!-- Trust Badges -->
+	<section class="border-y bg-muted/30 py-12">
+		<div class="container mx-auto px-4 text-center">
+			<p
+				class="mb-6 text-sm font-medium text-muted-foreground uppercase tracking-widest"
 			>
-				<span class="font-serif text-lg font-bold text-foreground"
-					>Kemenkumham</span
-				>
-			</div>
+				Dipercaya Oleh
+			</p>
 			<div
-				class="flex items-center justify-center gap-2 p-4 rounded-lg hover:bg-background/50 transition-colors"
+				class="grid grid-cols-2 gap-8 md:grid-cols-4 opacity-70 grayscale transition-all hover:grayscale-0"
 			>
-				<span class="font-serif text-lg font-bold text-foreground"
-					>Kemenlu</span
+				<div
+					class="flex items-center justify-center gap-2 p-4 rounded-lg hover:bg-background/50 transition-colors"
 				>
-			</div>
-			<div
-				class="flex items-center justify-center gap-2 p-4 rounded-lg hover:bg-background/50 transition-colors"
-			>
-				<span class="font-serif text-lg font-bold text-foreground"
-					>Kedutaan Saudi</span
+					<span class="font-serif text-lg font-bold text-foreground"
+						>Kemenkumham</span
+					>
+				</div>
+				<div
+					class="flex items-center justify-center gap-2 p-4 rounded-lg hover:bg-background/50 transition-colors"
 				>
-			</div>
-			<div
-				class="flex items-center justify-center gap-2 p-4 rounded-lg hover:bg-background/50 transition-colors"
-			>
-				<span class="font-serif text-lg font-bold text-foreground"
-					>Himpunan Penerjemah</span
+					<span class="font-serif text-lg font-bold text-foreground"
+						>Kemenlu</span
+					>
+				</div>
+				<div
+					class="flex items-center justify-center gap-2 p-4 rounded-lg hover:bg-background/50 transition-colors"
 				>
+					<span class="font-serif text-lg font-bold text-foreground"
+						>Kedutaan Saudi</span
+					>
+				</div>
+				<div
+					class="flex items-center justify-center gap-2 p-4 rounded-lg hover:bg-background/50 transition-colors"
+				>
+					<span class="font-serif text-lg font-bold text-foreground"
+						>Himpunan Penerjemah</span
+					>
+				</div>
 			</div>
 		</div>
-	</div>
-</section>
+	</section>
 
-<style>
-	@keyframes fade-in-up {
-		from {
+	<style>
+		@keyframes fade-in-up {
+			from {
+				opacity: 0;
+				transform: translateY(20px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		.animate-fade-in-up {
+			animation: fade-in-up 0.8s ease-out forwards;
 			opacity: 0;
-			transform: translateY(20px);
 		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
+
+		.delay-100 {
+			animation-delay: 0.1s;
 		}
-	}
-
-	.animate-fade-in-up {
-		animation: fade-in-up 0.8s ease-out forwards;
-		opacity: 0;
-	}
-
-	.delay-100 {
-		animation-delay: 0.1s;
-	}
-	.delay-200 {
-		animation-delay: 0.2s;
-	}
-	.delay-300 {
-		animation-delay: 0.3s;
-	}
-</style>
+		.delay-200 {
+			animation-delay: 0.2s;
+		}
+		.delay-300 {
+			animation-delay: 0.3s;
+		}
+	</style>
+</Layout>

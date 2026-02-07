@@ -7,3 +7,4 @@ trigger: always_on
 3. **Always research before implementing something new, with `context7` or web search**
 4. If an error is persistent, step back to research the root cause.
 5. The main rule is **Efficiency** and **DRY**.
+6. **always** use `supabase-tarjuman` if you need *anything* with supabase.
