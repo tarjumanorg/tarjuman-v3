@@ -1,0 +1,31 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { createAstroSupabase } from "../../lib/supabase";
+
+const supabase = createAstroSupabase(Astro);
+const {
+    data: { user },
+} = await supabase.auth.getUser();
+
+if (!user) {
+    return Astro.redirect("/login");
+}
+---
+
+<Layout title="Dashboard - Tarjuman">
+    <main class="container mx-auto p-4">
+        <h1 class="text-2xl font-bold">Welcome, {user.email}</h1>
+        <p class="mt-4">You are securely logged in.</p>
+
+        <div class="mt-8">
+            <form action="/api/auth/signout" method="post">
+                <button
+                    type="submit"
+                    class="rounded bg-destructive px-4 py-2 text-destructive-foreground"
+                >
+                    Sign Out
+                </button>
+            </form>
+        </div>
+    </main>
+</Layout>
