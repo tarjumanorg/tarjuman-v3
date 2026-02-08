@@ -42,8 +42,8 @@ import Layout from "../layouts/Layout.astro";
             </div>
 
             <div class="space-y-4">
-                <a
-                    href="/api/auth/signin"
+                <button
+                    onclick="const params = new URLSearchParams(window.location.search); const redirect = params.get('redirect'); window.location.href = '/api/auth/signin' + (redirect ? '?redirect=' + encodeURIComponent(redirect) : '');"
                     class="flex w-full items-center justify-center gap-3 rounded-md border border-input bg-white px-4 py-3 font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                 >
                     <svg class="h-5 w-5" viewBox="0 0 24 24">
@@ -61,7 +61,7 @@ import Layout from "../layouts/Layout.astro";
                             fill="#EA4335"></path>
                     </svg>
                     Masuk dengan Google
-                </a>
+                </button>
             </div>
 
             <p class="mt-8 text-center text-xs text-muted-foreground">

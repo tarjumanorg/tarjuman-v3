@@ -1,0 +1,164 @@
+---
+import { createClient } from "../lib/supabase";
+
+const supabase = createClient(Astro);
+const {
+    data: { user },
+} = await supabase.auth.getUser();
+
+// Check for admin role if user exists
+let isAdmin = false;
+if (user) {
+    const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+    isAdmin = profile?.role === "admin";
+}
+---
+
+<nav
+    class="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40"
+>
+    <div class="container flex h-16 items-center justify-between px-4 mx-auto">
+        <div class="flex gap-6 md:gap-10">
+            <a
+                href="/"
+                class="flex items-center space-x-2 font-serif font-bold text-xl tracking-tight text-primary"
+            >
+                <!-- SVG Icon for 'Ta' could go here, for now using text -->
+                <span>Tarjuman</span>
+            </a>
+            <!-- Desktop Nav -->
+            <nav class="hidden md:flex gap-6">
+                <a
+                    href="/"
+                    class="flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                >
+                    Beranda
+                </a>
+                <a
+                    href="/dashboard"
+                    class="flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                >
+                    Dashboard
+                </a>
+                {
+                    isAdmin && (
+                        <a
+                            href="/admin"
+                            class="flex items-center text-sm font-bold text-destructive transition-colors hover:text-destructive/80"
+                        >
+                            Admin Area
+                        </a>
+                    )
+                }
+            </nav>
+        </div>
+
+        <div class="flex items-center gap-4">
+            {
+                user ? (
+                    <div class="hidden md:flex items-center gap-4">
+                        <span class="text-xs text-muted-foreground hidden sm:inline-block">
+                            {user.email}
+                        </span>
+                        <a
+                            href="/api/auth/signout"
+                            class="text-sm font-medium text-destructive hover:text-destructive/80 transition-colors"
+                        >
+                            Keluar
+                        </a>
+                    </div>
+                ) : (
+                    <a
+                        href="/login"
+                        class="text-sm font-medium transition-colors hover:text-primary"
+                    >
+                        Masuk
+                    </a>
+                )
+            }
+            <!-- Mobile Menu Toggle -->
+            <button id="mobile-menu-btn" class="md:hidden p-2 text-foreground">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-menu"
+                    ><line x1="4" x2="20" y1="12" y2="12"></line><line
+                        x1="4"
+                        x2="20"
+                        y1="6"
+                        y2="6"></line><line x1="4" x2="20" y1="18" y2="18"
+                    ></line></svg
+                >
+            </button>
+        </div>
+    </div>
+
+    <!-- Mobile Nav -->
+    <div
+        id="mobile-menu"
+        class="hidden md:hidden border-t px-4 py-4 space-y-4 bg-background shadow-lg"
+    >
+        <a
+            href="/"
+            class="block text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+        >
+            Beranda
+        </a>
+        <a
+            href="/dashboard"
+            class="block text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+        >
+            Dashboard
+        </a>
+        {
+            isAdmin && (
+                <a
+                    href="/admin"
+                    class="block text-sm font-bold text-destructive transition-colors hover:text-destructive/80"
+                >
+                    Admin Area
+                </a>
+            )
+        }
+        {
+            user && (
+                <a
+                    href="/api/auth/signout"
+                    class="block text-sm font-medium text-destructive transition-colors hover:text-destructive/80"
+                >
+                    Keluar
+                </a>
+            )
+        }
+        {
+            !user && (
+                <a
+                    href="/login"
+                    class="block text-sm font-medium text-primary transition-colors hover:text-primary/80"
+                >
+                    Masuk
+                </a>
+            )
+        }
+    </div>
+
+    <script>
+        const btn = document.getElementById("mobile-menu-btn");
+        const menu = document.getElementById("mobile-menu");
+
+        btn?.addEventListener("click", () => {
+            menu?.classList.toggle("hidden");
+        });
+    </script>
+</nav>

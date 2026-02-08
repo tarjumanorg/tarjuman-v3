@@ -1,0 +1,376 @@
+---
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { createClient } from "../../../lib/supabase";
+
+const { id } = Astro.params;
+const supabase = createClient(Astro);
+
+if (!id) return Astro.redirect("/admin");
+
+// Fetch Order
+const { data: order, error } = await supabase
+    .from("orders")
+    .select("*, profiles!inner(*), order_files(*)")
+    .eq("id", id)
+    .single();
+
+if (error || !order) return Astro.redirect("/admin");
+
+// Formatters
+function formatPrice(price: number) {
+    return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0,
+    }).format(price);
+}
+---
+
+<AdminLayout title={`Order #${id.slice(0, 8)}`}>
+    <div class="mb-6 flex items-center gap-4">
+        <a href="/admin" class="text-slate-500 hover:text-slate-900"
+            >&larr; Back to Dashboard</a
+        >
+        <h1 class="text-2xl font-bold">Manage Order #{id.slice(0, 8)}</h1>
+        <span
+            class="px-3 py-1 rounded-full text-sm font-bold bg-slate-200 text-slate-800 uppercase"
+            >{order.status}</span
+        >
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left: Order Info & Source Files -->
+        <div class="lg:col-span-2 space-y-8">
+            <!-- User Info -->
+            <div
+                class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"
+            >
+                <h3 class="font-bold text-lg mb-4 text-slate-800">
+                    User Information
+                </h3>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="block text-slate-500">Email</span>
+                        <span class="font-medium">{order.profiles.email}</span>
+                    </div>
+                    <div>
+                        <span class="block text-slate-500">WhatsApp</span>
+                        <span class="font-medium"
+                            >{order.profiles.whatsapp_number || "-"}</span
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Source Files -->
+            <div
+                class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"
+            >
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-lg text-slate-800">
+                        Source Files (Dokumen Asli)
+                    </h3>
+                    <button
+                        id="downloadAllBtn"
+                        class="text-sm bg-slate-900 text-white px-3 py-2 rounded hover:bg-slate-800 transition-colors"
+                    >
+                        Download All
+                    </button>
+                </div>
+
+                <div class="space-y-3">
+                    {
+                        order.order_files
+                            .filter((f: any) => f.file_type === "original")
+                            .map((file: any) => (
+                                <div class="flex items-center justify-between p-3 rounded-lg border border-slate-200">
+                                    <div class="flex items-center gap-3">
+                                        <span class="bg-slate-100 p-2 rounded text-xs font-bold text-slate-600">
+                                            PDF
+                                        </span>
+                                        <div>
+                                            <p
+                                                class="text-sm font-medium w-48 truncate mb-0.5"
+                                                title={file.file_path
+                                                    .split("/")
+                                                    .pop()}
+                                            >
+                                                {file.file_path
+                                                    .split("/")
+                                                    .pop()}
+                                            </p>
+                                            <p class="text-xs text-slate-500">
+                                                {file.page_count} Halaman (Est)
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <a
+                                        href={`/api/files/download?path=${file.file_path}`}
+                                        target="_blank"
+                                        class="file-download-link text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                    >
+                                        Download
+                                    </a>
+                                </div>
+                            ))
+                    }
+                </div>
+            </div>
+
+            <!-- Timeline / Notes (Simple implementation) -->
+            <div
+                class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"
+            >
+                <h3 class="font-bold text-lg mb-4 text-slate-800">
+                    Timeline Logic
+                </h3>
+                <ul class="space-y-4 relative border-l-2 border-slate-100 ml-2">
+                    <li class="pl-6 relative">
+                        <span
+                            class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-green-500 border-2 border-white"
+                        ></span>
+                        <p class="text-sm font-medium">Order Created</p>
+                        <p class="text-xs text-slate-500">
+                            {new Date(order.created_at).toLocaleString()}
+                        </p>
+                    </li>
+                    {
+                        order.status !== "payment_pending" && (
+                            <li class="pl-6 relative">
+                                <span class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-blue-500 border-2 border-white" />
+                                <p class="text-sm font-medium">
+                                    Payment Verified
+                                </p>
+                            </li>
+                        )
+                    }
+                </ul>
+            </div>
+        </div>
+
+        <!-- Right: Actions Panel -->
+        <div class="space-y-6">
+            <!-- Price/Page Count Adjustment (Only if not completed) -->
+            {
+                order.status !== "completed" && (
+                    <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
+                        <h3 class="font-bold text-lg text-amber-900 mb-4">
+                            Verifikasi Order
+                        </h3>
+                        <form
+                            action="/api/admin/update-order"
+                            method="POST"
+                            class="space-y-4"
+                        >
+                            <input
+                                type="hidden"
+                                name="orderId"
+                                value={order.id}
+                            />
+
+                            <div>
+                                <label class="block text-xs font-bold text-amber-800 uppercase mb-1">
+                                    Total Halaman (Final)
+                                </label>
+                                <input
+                                    type="number"
+                                    name="pageCount"
+                                    class="w-full rounded border-amber-300 focus:ring-amber-500 focus:border-amber-500"
+                                    value={
+                                        order.page_count_estimated ||
+                                        order.order_files.length
+                                    }
+                                />
+                                <p class="text-xs text-amber-700 mt-1">
+                                    Ubah ini jika jumlah halaman berbeda.
+                                </p>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-amber-800 uppercase mb-1">
+                                    Total Harga (IDR)
+                                </label>
+                                <input
+                                    type="number"
+                                    name="finalPrice"
+                                    class="w-full rounded border-amber-300 focus:ring-amber-500 focus:border-amber-500"
+                                    value={order.final_price}
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                class="w-full bg-amber-600 text-white font-bold py-2 rounded hover:bg-amber-700 transition-colors"
+                            >
+                                Simpan Perubahan
+                            </button>
+                        </form>
+                    </div>
+                )
+            }
+
+            <!-- Status Actions -->
+            <div
+                class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"
+            >
+                <h3 class="font-bold text-lg text-slate-800 mb-4">
+                    Proses Kerja
+                </h3>
+
+                {
+                    order.status === "payment_pending" && (
+                        <div class="text-sm text-slate-500">
+                            Menunggu pembayaran user. Anda bisa mengubah harga
+                            di atas jika perlu.
+                        </div>
+                    )
+                }
+
+                {
+                    (order.status === "processing" ||
+                        order.status === "paid") && (
+                        <div class="space-y-4">
+                            <div class="p-3 bg-blue-50 text-blue-800 rounded text-sm">
+                                <strong>Status:</strong> Sedang diterjemahkan.
+                            </div>
+                            <form
+                                action="/api/admin/upload-draft"
+                                method="POST"
+                                enctype="multipart/form-data"
+                                class="space-y-3"
+                            >
+                                <input
+                                    type="hidden"
+                                    name="orderId"
+                                    value={order.id}
+                                />
+                                <label class="block text-sm font-medium">
+                                    Upload Draft (Watermarked)
+                                </label>
+                                <input
+                                    type="file"
+                                    name="draftFile"
+                                    accept=".pdf"
+                                    class="block w-full text-sm text-slate-500
+                              file:mr-4 file:py-2 file:px-4
+                              file:rounded-full file:border-0
+                              file:text-sm file:font-semibold
+                              file:bg-blue-50 file:text-blue-700
+                              hover:file:bg-blue-100
+                            "
+                                />
+                                <button class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700">
+                                    Upload Draft & Notify User
+                                </button>
+                            </form>
+                        </div>
+                    )
+                }
+
+                {
+                    order.status === "review" && (
+                        <div class="space-y-4">
+                            <div class="p-3 bg-amber-50 text-amber-800 rounded text-sm">
+                                <strong>Status:</strong> Menunggu
+                                review/persetujuan user.
+                            </div>
+                            <p class="text-sm text-slate-600">
+                                Jika ada revisi, upload draft baru di bawah:
+                            </p>
+                            <form
+                                action="/api/admin/upload-draft"
+                                method="POST"
+                                enctype="multipart/form-data"
+                            >
+                                <input
+                                    type="hidden"
+                                    name="orderId"
+                                    value={order.id}
+                                />
+                                <input
+                                    type="file"
+                                    name="draftFile"
+                                    accept=".pdf"
+                                    class="mb-2 block w-full text-sm"
+                                />
+                                <button class="w-full bg-slate-900 text-white text-sm py-2 rounded">
+                                    Upload Revisi
+                                </button>
+                            </form>
+
+                            <hr class="my-4" />
+
+                            <form
+                                action="/api/admin/finalize"
+                                method="POST"
+                                enctype="multipart/form-data"
+                                class="space-y-3"
+                            >
+                                <input
+                                    type="hidden"
+                                    name="orderId"
+                                    value={order.id}
+                                />
+                                <label class="block text-sm font-medium">
+                                    Upload Final (Signed/Stamped)
+                                </label>
+                                <input
+                                    type="file"
+                                    name="finalFile"
+                                    accept=".pdf"
+                                    required
+                                    class="block w-full text-sm text-slate-500
+                              file:mr-4 file:py-2 file:px-4
+                              file:rounded-full file:border-0
+                              file:text-sm file:font-semibold
+                              file:bg-green-50 file:text-green-700
+                              hover:file:bg-green-100
+                            "
+                                />
+                                <button class="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-700">
+                                    Selesai & Kirim ke User
+                                </button>
+                            </form>
+                        </div>
+                    )
+                }
+
+                {
+                    order.status === "completed" && (
+                        <div class="p-4 bg-green-50 text-green-800 rounded text-center">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="48"
+                                height="48"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="mx-auto mb-2"
+                            >
+                                <>
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                    <polyline points="22 4 12 14.01 9 11.01" />
+                                </>
+                            </svg>
+                            <p class="font-bold">Order Selesai</p>
+                        </div>
+                    )
+                }
+            </div>
+        </div>
+    </div>
+</AdminLayout>
+
+<script>
+    document.getElementById("downloadAllBtn")?.addEventListener("click", () => {
+        const downloadLinks = document.querySelectorAll(".file-download-link");
+        downloadLinks.forEach((link, index) => {
+            setTimeout(() => {
+                window.open((link as HTMLAnchorElement).href, "_blank");
+            }, index * 300); // Stagger downloads to avoid popup blocker
+        });
+    });
+</script>

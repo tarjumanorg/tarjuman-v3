@@ -1,0 +1,169 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { createClient } from "../../lib/supabase";
+
+const { id } = Astro.params;
+const supabase = createClient(Astro);
+
+if (!id) {
+    return Astro.redirect("/404");
+}
+
+const {
+    data: { user },
+} = await supabase.auth.getUser();
+
+if (!user) {
+    return Astro.redirect(`/login?redirect=/payment/${id}`);
+}
+
+// Fetch order details
+const { data: order, error } = await supabase
+    .from("orders")
+    .select("*, order_files(*)")
+    .eq("id", id)
+    .single();
+
+if (error || !order) {
+    console.error("Error fetching order:", error);
+    return Astro.redirect("/404");
+}
+
+// Security: Ensure user owns the order
+if (order.user_id !== user.id) {
+    return Astro.redirect("/404");
+}
+
+function formatPrice(price: number) {
+    return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0,
+    }).format(price);
+}
+---
+
+<Layout title={`Pembayaran Order #${id?.slice(0, 8)} - Tarjuman`}>
+    <div class="container mx-auto py-10 px-4 max-w-2xl">
+        <a
+            href="/dashboard"
+            class="text-sm text-muted-foreground hover:text-primary mb-6 inline-block"
+        >
+            &larr; Kembali ke Dashboard
+        </a>
+
+        <div
+            class="rounded-xl border border-border bg-card shadow-lg overflow-hidden"
+        >
+            <div class="bg-primary/5 p-6 border-b border-border">
+                <h1 class="font-serif text-2xl font-bold text-foreground">
+                    Konfirmasi Pembayaran
+                </h1>
+                <p class="text-muted-foreground text-sm mt-1">
+                    Selesaikan pembayaran untuk memproses pesananmu.
+                </p>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <!-- Order Summary -->
+                <div class="space-y-4">
+                    <div
+                        class="flex justify-between py-2 border-b border-border/50"
+                    >
+                        <span class="text-muted-foreground">Order ID</span>
+                        <span class="font-mono text-sm">{order.id}</span>
+                    </div>
+                    <div
+                        class="flex justify-between py-2 border-b border-border/50"
+                    >
+                        <span class="text-muted-foreground">Estimasi Waktu</span
+                        >
+                        <span class="font-medium"
+                            >{order.urgency_days} Hari Kerja</span
+                        >
+                    </div>
+                    <div
+                        class="flex justify-between py-2 border-b border-border/50"
+                    >
+                        <span class="text-muted-foreground">Jumlah Dokumen</span
+                        >
+                        <span class="font-medium"
+                            >{order.order_files.length} File</span
+                        >
+                    </div>
+                    <div
+                        class="flex justify-between py-2 border-b border-border/50"
+                    >
+                        <span class="text-muted-foreground"
+                            >Total Halaman (Est)</span
+                        >
+                        <span class="font-medium"
+                            >{order.page_count_estimated} Halaman</span
+                        >
+                    </div>
+                </div>
+
+                <!-- Total -->
+                <div
+                    class="flex justify-between items-center bg-muted/50 p-4 rounded-lg"
+                >
+                    <span class="font-semibold text-lg">Total Tagihan</span>
+                    <span class="font-bold text-2xl text-primary"
+                        >{formatPrice(order.final_price || 0)}</span
+                    >
+                </div>
+
+                <!-- Payment Methods (Placeholder) -->
+                <div class="space-y-3">
+                    <h3 class="font-semibold">Metode Pembayaran</h3>
+                    <div class="grid grid-cols-1 gap-3">
+                        <button
+                            id="mock-pay-btn"
+                            class="flex items-center justify-center gap-2 rounded-lg bg-green-600 text-white p-4 hover:bg-green-700 transition-colors font-bold shadow-lg"
+                        >
+                            <span>Bayar Sekarang (Mock Success)</span>
+                        </button>
+
+                        <a
+                            href={`https://wa.me/6281234567890?text=${encodeURIComponent(`Halo Tarjuman, saya ingin konfirmasi pembayaran untuk Order ID: ${order.id}.`)}`}
+                            target="_blank"
+                            class="flex items-center justify-center gap-2 rounded-lg border border-input bg-background p-4 hover:bg-accent transition-colors"
+                        >
+                            <span class="font-medium"
+                                >Konfirmasi via WhatsApp (Manual)</span
+                            >
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</Layout>
+
+<script define:vars={{ orderId: id }}>
+    const btn = document.getElementById("mock-pay-btn");
+    btn?.addEventListener("click", async () => {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "Memproses...";
+        btn.disabled = true;
+
+        try {
+            const res = await fetch(`/api/orders/${orderId}/pay`, {
+                method: "POST",
+            });
+            if (res.ok) {
+                // Redirect to success page
+                window.location.href = `/payment/success/${orderId}`;
+            } else {
+                alert("Payment failed");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Payment failed");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    });
+</script>

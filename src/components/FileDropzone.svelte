@@ -2,10 +2,10 @@
     import { fade } from "svelte/transition";
     import {
         orderStore,
-        addFiles,
+        addFile,
         removeFile,
-        updateFilePages,
-    } from "../stores/order";
+        updatePageCount,
+    } from "../stores/orderStore";
     import { countPdfPages } from "../utils/pdf";
 
     import { Button } from "$lib/components/ui/button";
@@ -45,30 +45,33 @@
 
     async function processFiles(newFiles: File[]) {
         isProcessing = true;
-        const currentCount = orderStore.get().files.length;
-
-        // Filter and transform
-        const validFiles = [];
+        const currentCount = $orderStore.files.length;
 
         for (const file of newFiles) {
-            if (currentCount + validFiles.length >= maxFiles) break;
-            if (file.size > maxSizeMB * 1024 * 1024) continue; // Skip large files silently or handle error
+            // Check limits inside loop or check total count
+            if (currentCount >= maxFiles) break; // Should verify against updated count if adding multiple
+            // But simplistic approach:
+            if ($orderStore.files.length >= maxFiles) break;
+
+            if (file.size > maxSizeMB * 1024 * 1024) continue;
 
             const id = Math.random().toString(36).substring(7);
-            let pages = 1;
-            let preview = "";
+            let pageCount = 1;
+            let previewUrl = undefined;
 
             if (file.type === "application/pdf") {
-                pages = await countPdfPages(file);
+                pageCount = await countPdfPages(file);
             } else if (file.type.startsWith("image/")) {
-                preview = URL.createObjectURL(file);
+                previewUrl = URL.createObjectURL(file);
             }
 
-            validFiles.push({ file, id, pages, preview });
-        }
-
-        if (validFiles.length > 0) {
-            addFiles(validFiles);
+            addFile({
+                id,
+                file,
+                name: file.name,
+                pageCount,
+                previewUrl,
+            });
         }
 
         isProcessing = false;
@@ -122,9 +125,9 @@
                         <div
                             class="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-muted"
                         >
-                            {#if file.preview}
+                            {#if file.previewUrl}
                                 <img
-                                    src={file.preview}
+                                    src={file.previewUrl}
                                     alt="preview"
                                     class="h-full w-full object-cover rounded-md"
                                 />
@@ -138,7 +141,7 @@
                         <!-- Info -->
                         <div class="flex-1 min-w-0 text-left">
                             <p class="truncate text-sm font-medium">
-                                {file.file.name}
+                                {file.name}
                             </p>
                             <p class="text-xs text-muted-foreground">
                                 {(file.file.size / 1024 / 1024).toFixed(2)} MB
@@ -152,17 +155,22 @@
                             <button
                                 class="text-muted-foreground hover:text-foreground disabled:opacity-50"
                                 on:click={() =>
-                                    updateFilePages(file.id, file.pages - 1)}
-                                disabled={file.pages <= 1}>-</button
+                                    updatePageCount(
+                                        file.id,
+                                        file.pageCount - 1,
+                                    )}
+                                disabled={file.pageCount <= 1}>-</button
                             >
                             <span class="w-4 text-center text-sm font-medium"
-                                >{file.pages}</span
+                                >{file.pageCount}</span
                             >
                             <button
                                 class="text-muted-foreground hover:text-foreground"
                                 on:click={() =>
-                                    updateFilePages(file.id, file.pages + 1)}
-                                >+</button
+                                    updatePageCount(
+                                        file.id,
+                                        file.pageCount + 1,
+                                    )}>+</button
                             >
                             <span class="text-xs text-muted-foreground"
                                 >hlm</span

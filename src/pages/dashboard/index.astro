@@ -10,39 +10,181 @@ const {
 if (!user) {
     return Astro.redirect("/login");
 }
+
+const { data: orders, error } = await supabase
+    .from("orders")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+if (error) {
+    console.error("Error fetching orders:", error);
+}
+
+function formatPrice(price: number) {
+    return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0,
+    }).format(price);
+}
+
+function getStatusBadge(status: string) {
+    switch (status) {
+        case "payment_pending":
+            return "bg-yellow-100 text-yellow-800 border-yellow-200";
+        case "paid":
+        case "processing":
+            return "bg-blue-100 text-blue-800 border-blue-200";
+        case "completed":
+            return "bg-green-100 text-green-800 border-green-200";
+        case "cancelled":
+            return "bg-red-100 text-red-800 border-red-200";
+        default:
+            return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+}
+
+function getStatusLabel(status: string) {
+    const labels: Record<string, string> = {
+        payment_pending: "Menunggu Pembayaran",
+        paid: "Dibayar",
+        processing: "Sedang Dikerjakan",
+        completed: "Selesai",
+        cancelled: "Dibatalkan",
+    };
+    return labels[status] || status;
+}
 ---
 
 <Layout title="Dashboard - Tarjuman">
     <div class="container mx-auto py-10 px-4">
-        <div class="mb-8 flex items-center justify-between">
-            <h1 class="font-serif text-3xl font-bold text-primary">
-                Dashboard
-            </h1>
-            <div class="flex items-center gap-4">
-                <span class="text-sm text-muted-foreground">{user.email}</span>
-                <a
-                    href="/api/auth/signout"
-                    class="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-                >
-                    Keluar
-                </a>
+        <div
+            class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+        >
+            <div>
+                <h1 class="font-serif text-3xl font-bold text-primary">
+                    Pesanan Saya
+                </h1>
+                <p class="text-muted-foreground mt-1">
+                    Halo, <span class="font-medium text-foreground"
+                        >{user.email}</span>
+                </p>
             </div>
+            
         </div>
 
-        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <!-- Status Card -->
-            <div class="rounded-lg border border-border bg-card p-6 shadow-sm">
-                <h3 class="mb-2 font-semibold text-lg">Status Pesanan</h3>
-                <p class="text-muted-foreground">Belum ada pesanan aktif.</p>
-                <div class="mt-4">
-                    <a
-                        href="/"
-                        class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    >
-                        Buat Pesanan Baru
-                    </a>
-                </div>
-            </div>
+        <div class="space-y-6">
+            {
+                !orders || orders.length === 0 ? (
+                    <div class="rounded-lg border border-dashed border-border p-12 text-center">
+                        <h3 class="font-medium text-lg mb-2">
+                            Belum ada pesanan
+                        </h3>
+                        <p class="text-muted-foreground mb-6">
+                            Mulai terjemahkan dokumenmu sekarang.
+                        </p>
+                        <a
+                            href="/"
+                            class="inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground shadow transition-transform hover:scale-105 active:scale-95"
+                        >
+                            Buat Pesanan Baru
+                        </a>
+                    </div>
+                ) : (
+                    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        {orders.map((order) => {
+                            // Calculate ETA
+                            const created = new Date(order.created_at);
+                            const urgency = order.urgency_days || 3;
+                            const eta = new Date(created);
+                            eta.setDate(eta.getDate() + urgency);
+
+                            // Calculate Time Left
+                            const now = new Date();
+                            const diffTime = eta.getTime() - now.getTime();
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            
+                            let timeLeftString = "";
+                            if (diffDays > 0) {
+                                timeLeftString = `${diffDays} Hari Lagi`;
+                            } else if (diffDays === 0) {
+                                timeLeftString = "Hari Ini";
+                            } else {
+                                timeLeftString = "Terlambat";
+                            }
+
+                            if (order.status === 'completed') timeLeftString = "Selesai";
+                            if (order.status === 'cancelled') timeLeftString = "-";
+                            if (order.status === 'payment_pending') timeLeftString = "-";
+
+                            return (
+                            <div class="rounded-xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full group">
+                                <!-- Header: Status & ID -->
+                                <div class="flex justify-between items-start mb-4">
+                                     <span
+                                        class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${getStatusBadge(order.status || "")}`}
+                                    >
+                                        {getStatusLabel(order.status || "")}
+                                    </span>
+                                    <span class="text-xs text-muted-foreground font-mono">#{order.id.slice(0, 8)}</span>
+                                </div>
+
+                                <!-- Body: Context -->
+                                <div class="space-y-4 flex-grow">
+                                    <div class="space-y-1">
+                                         <p class="text-xs text-muted-foreground">Dipesan pada</p>
+                                         <p class="text-sm font-medium">
+                                            {new Date(order.created_at).toLocaleDateString("id-ID", {
+                                                day: "numeric",
+                                                month: "short",
+                                                year: "numeric"
+                                            })}
+                                         </p>
+                                    </div>
+                                    
+                                    {order.status !== 'payment_pending' && order.status !== 'cancelled' && order.status !== 'completed' && (
+                                    <div class="space-y-1">
+                                        <p class="text-xs text-muted-foreground">Sisa Waktu</p>
+                                        <p class={`text-lg font-bold ${diffDays < 1 ? 'text-orange-600' : 'text-primary'}`}>
+                                            {timeLeftString}
+                                        </p>
+                                    </div>
+                                    )}
+
+                                    {order.status === 'payment_pending' && (
+                                         <div class="space-y-1">
+                                            <p class="text-xs text-muted-foreground">Total Tagihan</p>
+                                            <p class="text-lg font-bold text-destructive">
+                                                {formatPrice(order.final_price || 0)}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <!-- Footer: Action -->
+                                <div class="pt-6 mt-2 border-t border-border/50">
+                                    {order.status === "payment_pending" ? (
+                                        <a
+                                            href={`/payment/${order.id}`}
+                                            class="w-full inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+                                        >
+                                            Bayar Tagihan
+                                        </a>
+                                    ) : (
+                                        <a
+                                            href={`/orders/${order.id}`}
+                                            class="w-full group-hover:bg-primary group-hover:text-primary-foreground inline-flex items-center justify-center rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium transition-colors"
+                                        >
+                                            Lihat Detail
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+                        )})}
+                    </div>
+                )
+            }
         </div>
     </div>
 </Layout>
