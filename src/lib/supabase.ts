@@ -1,32 +1,37 @@
-import { createServerClient, createBrowserClient, parseCookieHeader, type CookieOptions } from '@supabase/ssr'
-import { createClient } from '@supabase/supabase-js'
-import type { APIContext } from 'astro'
+import { createBrowserClient, createServerClient, parseCookieHeader } from '@supabase/ssr';
+import type { APIContext } from 'astro';
+import type { Database } from '../types/supabase';
 
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+// Helper to create a client. 
+// Pass `context` (APIContext) when using in Astro Server (pages/api).
+// Pass nothing when using in Client (Svelte).
+export const createClient = (context?: APIContext) => {
+    // Server-side (Astro)
+    if (context) {
+        return createServerClient<Database>(
+            import.meta.env.PUBLIC_SUPABASE_URL,
+            import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+            {
+                cookies: {
+                    getAll() {
+                        return parseCookieHeader(context.request.headers.get('Cookie') ?? '').map((cookie) => ({
+                            name: cookie.name,
+                            value: cookie.value ?? '',
+                        }));
+                    },
+                    setAll(cookiesToSet) {
+                        cookiesToSet.forEach(({ name, value, options }) => {
+                            context.cookies.set(name, value, options);
+                        });
+                    },
+                },
+            }
+        );
+    }
 
-// Client-side client
-export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
-
-// Server-side client helper
-export function createAstroSupabase(context: APIContext) {
-    return createServerClient(supabaseUrl, supabaseAnonKey, {
-        cookies: {
-            getAll() {
-                const cookies = parseCookieHeader(context.request.headers.get('Cookie') ?? '')
-                return cookies.map(c => ({ ...c, value: c.value ?? '' }))
-            },
-            setAll(cookiesToSet) {
-                console.log("Setting cookies:", cookiesToSet.map(c => c.name));
-                cookiesToSet.forEach(({ name, value, options }) => {
-                    context.cookies.set(name, value, {
-                        ...options,
-                        path: '/',
-                        // Secure should be false on localhost if not https
-                        secure: import.meta.env.PROD || options.secure,
-                    })
-                })
-            },
-        },
-    })
-}
+    // Client-side (Browser)
+    return createBrowserClient<Database>(
+        import.meta.env.PUBLIC_SUPABASE_URL,
+        import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+    );
+};

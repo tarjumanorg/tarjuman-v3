@@ -1,34 +1,20 @@
 import type { APIRoute } from "astro";
-import { createAstroSupabase } from "../../../lib/supabase";
-import type { Provider } from "@supabase/supabase-js";
+import { createClient } from "../../../lib/supabase";
 
-export const POST: APIRoute = async (context) => {
-    const { request, redirect } = context;
+export const GET: APIRoute = async (context) => {
+    const supabase = createClient(context);
+    const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+            redirectTo: import.meta.env.DEV
+                ? "http://localhost:4321/api/auth/callback"
+                : "https://tarjuman.org/api/auth/callback",
+        },
+    });
 
-    // Debug log
-    console.log("Signin request Content-Type:", request.headers.get("Content-Type"));
-
-    const formData = await request.formData();
-    const provider = formData.get("provider")?.toString();
-    const next = formData.get("next")?.toString() || "/dashboard";
-
-    if (provider) {
-        const supabase = createAstroSupabase(context);
-        const { data, error } = await supabase.auth.signInWithOAuth({
-            provider: provider as Provider,
-            options: {
-                redirectTo: import.meta.env.DEV
-                    ? `http://localhost:4321/api/auth/callback?next=${next}`
-                    : `https://tarjuman.org/api/auth/callback?next=${next}`,
-            },
-        });
-
-        if (error) {
-            return new Response(error.message, { status: 500 });
-        }
-
-        return redirect(data.url);
+    if (error) {
+        return new Response(error.message, { status: 500 });
     }
 
-    return redirect("/login");
+    return context.redirect(data.url);
 };

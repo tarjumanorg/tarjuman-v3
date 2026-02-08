@@ -1,13 +1,8 @@
 import type { APIRoute } from "astro";
-import { createAstroSupabase } from "../../../lib/supabase";
+import { createClient } from "../../../lib/supabase";
 
-export const POST: APIRoute = async (context) => {
-    const supabase = createAstroSupabase(context);
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-        return new Response(error.message, { status: 500 });
-    }
-
+export const GET: APIRoute = async (context) => {
+    const supabase = createClient(context);
+    await supabase.auth.signOut();
     return context.redirect("/");
 };

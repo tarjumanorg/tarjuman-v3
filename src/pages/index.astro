@@ -1,153 +1,145 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import FileDropzone from "../components/FileDropzone.svelte";
-import OrderConfig from "../components/OrderConfig.svelte";
-import MagicWorkflow from "../components/MagicWorkflow.svelte";
 ---
 
 <Layout title="Tarjuman - Jasa Penerjemah Tersumpah Resmi">
-	<main class="min-h-screen bg-background">
-		<!-- Hero Section -->
-		<section class="relative overflow-hidden pt-12 pb-24 sm:pt-20 sm:pb-32">
-			<div
-				class="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"
-			>
-			</div>
+    <main class="flex min-h-screen flex-col">
+        <!-- Hero Section -->
+        <section
+            class="relative bg-gradient-to-br from-primary to-primary-foreground py-20 text-white overflow-hidden"
+        >
+            <!-- Background Pattern (optional) -->
+            <div class="absolute inset-0 opacity-10 bg-[url('/pattern.svg')]">
+            </div>
 
-			<div class="container relative z-10 mx-auto px-4 text-center">
-				<div
-					id="hero-content"
-					class="transition-all duration-500 ease-in-out"
-				>
-					<div
-						class="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs sm:text-sm font-medium text-primary mb-6 sm:mb-8 animate-fade-in-up"
-					>
-						<span class="flex h-2 w-2 rounded-full bg-primary mr-2"
-						></span>
-						Resmi & Diakui Kemenkumham
-					</div>
+            <div class="container relative z-10 mx-auto px-4 text-center">
+                <h1
+                    class="mb-6 font-serif text-4xl md:text-5xl font-bold leading-tight"
+                >
+                    Terjemahan Resmi untuk<br />
+                    <span class="text-accent text-[#D97706]"
+                        >Masa Depan Akademik</span
+                    > Anda
+                </h1>
+                <p
+                    class="mb-10 text-lg text-primary-foreground/90 max-w-2xl mx-auto"
+                >
+                    Layanan penerjemah tersumpah (Sworn Translator) Bahasa Arab
+                    & Inggris. Diakui oleh Kedutaan Besar Arab Saudi dan
+                    Universitas di Timur Tengah.
+                </p>
 
-					<h1
-						class="mx-auto max-w-4xl font-serif text-4xl font-bold tracking-tight text-foreground sm:text-7xl mb-4 sm:mb-6 animate-fade-in-up delay-100"
-					>
-						Terjemahan Tersumpah.<br />
-						<span class="text-primary">Resmi. Cepat.</span>
-					</h1>
+                <!-- Call to Action / Dropzone wrapper -->
+                <div
+                    class="mx-auto max-w-3xl rounded-xl bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-6 shadow-2xl text-foreground ring-1 ring-border/50"
+                >
+                    <h2 class="mb-4 text-xl font-semibold text-primary">
+                        Mulai Disini - Upload Dokumen Anda
+                    </h2>
+                    <FileDropzone client:load />
+                </div>
+            </div>
+        </section>
 
-					<p
-						class="mx-auto max-w-2xl text-sm sm:text-lg text-muted-foreground mb-8 sm:mb-12 animate-fade-in-up delay-200"
-					>
-						Jasa penerjemah tersumpah untuk persyaratan beasiswa
-						Study in Saudi. Diakui oleh Kedutaan Besar & Universitas
-						di Arab Saudi.
-					</p>
-				</div>
-
-				<!-- Magic Workflow (Dropzone -> Order Config) -->
-				<div
-					class="mx-auto w-full transition-all duration-500 ease-in-out flex justify-center"
-				>
-					<MagicWorkflow client:load />
-				</div>
-			</div>
-
-			<script>
-				import { orderStore } from "../stores/orderStore";
-
-				const heroContent = document.getElementById("hero-content");
-
-				orderStore.subscribe((state) => {
-					if (heroContent) {
-						if (state.files.length > 0) {
-							// Hide hero content
-							heroContent.style.opacity = "0";
-							heroContent.style.visibility = "hidden";
-							heroContent.style.height = "0";
-							heroContent.style.marginBottom = "0";
-						} else {
-							// Show hero content
-							heroContent.style.visibility = "visible";
-							heroContent.style.height = "auto";
-							heroContent.style.marginBottom = "";
-							// Small delay to allow display block to apply before opacity
-							setTimeout(() => {
-								heroContent.style.opacity = "1";
-							}, 10);
-						}
-					}
-				});
-			</script>
-		</section>
-	</main>
-
-	<!-- Trust Badges -->
-	<section class="border-y bg-muted/30 py-12">
-		<div class="container mx-auto px-4 text-center">
-			<p
-				class="mb-6 text-sm font-medium text-muted-foreground uppercase tracking-widest"
-			>
-				Dipercaya Oleh
-			</p>
-			<div
-				class="grid grid-cols-2 gap-8 md:grid-cols-4 opacity-70 grayscale transition-all hover:grayscale-0"
-			>
-				<div
-					class="flex items-center justify-center gap-2 p-4 rounded-lg hover:bg-background/50 transition-colors"
-				>
-					<span class="font-serif text-lg font-bold text-foreground"
-						>Kemenkumham</span
-					>
-				</div>
-				<div
-					class="flex items-center justify-center gap-2 p-4 rounded-lg hover:bg-background/50 transition-colors"
-				>
-					<span class="font-serif text-lg font-bold text-foreground"
-						>Kemenlu</span
-					>
-				</div>
-				<div
-					class="flex items-center justify-center gap-2 p-4 rounded-lg hover:bg-background/50 transition-colors"
-				>
-					<span class="font-serif text-lg font-bold text-foreground"
-						>Kedutaan Saudi</span
-					>
-				</div>
-				<div
-					class="flex items-center justify-center gap-2 p-4 rounded-lg hover:bg-background/50 transition-colors"
-				>
-					<span class="font-serif text-lg font-bold text-foreground"
-						>Himpunan Penerjemah</span
-					>
-				</div>
-			</div>
-		</div>
-	</section>
-
-	<style>
-		@keyframes fade-in-up {
-			from {
-				opacity: 0;
-				transform: translateY(20px);
-			}
-			to {
-				opacity: 1;
-				transform: translateY(0);
-			}
-		}
-
-		.animate-fade-in-up {
-			animation: fade-in-up 0.8s ease-out forwards;
-			opacity: 0;
-		}
-
-		.delay-100 {
-			animation-delay: 0.1s;
-		}
-		.delay-200 {
-			animation-delay: 0.2s;
-		}
-		.delay-300 {
-			animation-delay: 0.3s;
-		}
-	</style>
+        <!-- Features / Trust Section -->
+        <section class="py-16 bg-muted/30">
+            <div class="container mx-auto px-4">
+                <div class="grid md:grid-cols-3 gap-8 text-center">
+                    <div
+                        class="p-6 rounded-lg bg-background shadow-sm border border-border"
+                    >
+                        <div
+                            class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                ><path
+                                    d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
+                                ></path></svg
+                            >
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">
+                            Tersumpah & Resmi
+                        </h3>
+                        <p class="text-muted-foreground">
+                            SK Gubernur DKI Jakarta. Diakui Kemenkumham, Kemlu,
+                            dan Kedutaan Arab Saudi.
+                        </p>
+                    </div>
+                    <div
+                        class="p-6 rounded-lg bg-background shadow-sm border border-border"
+                    >
+                        <div
+                            class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                ><circle cx="12" cy="12" r="10"
+                                ></circle><polyline points="12 6 12 12 16 14"
+                                ></polyline></svg
+                            >
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">
+                            Layanan Kilat
+                        </h3>
+                        <p class="text-muted-foreground">
+                            Opsi layanan Express (24 jam) untuk kebutuhan
+                            mendesak Anda.
+                        </p>
+                    </div>
+                    <div
+                        class="p-6 rounded-lg bg-background shadow-sm border border-border"
+                    >
+                        <div
+                            class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                ><rect
+                                    x="3"
+                                    y="11"
+                                    width="18"
+                                    height="11"
+                                    rx="2"
+                                    ry="2"></rect><path
+                                    d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg
+                            >
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">
+                            Aman & Terpercaya
+                        </h3>
+                        <p class="text-muted-foreground">
+                            Data dokumen Anda dijaga kerahasiaannya dengan
+                            sistem keamanan enkripsi.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
 </Layout>

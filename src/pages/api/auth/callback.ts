@@ -1,23 +1,21 @@
-import { createAstroSupabase } from "../../../lib/supabase";
 import type { APIRoute } from "astro";
+import { createClient } from "../../../lib/supabase";
 
 export const GET: APIRoute = async (context) => {
-    const { url, redirect } = context;
-    const authCode = url.searchParams.get("code");
-    const next = url.searchParams.get("next") || "/dashboard";
+    const { searchParams } = new URL(context.request.url);
+    const code = searchParams.get("code");
+    const next = searchParams.get("next") || "/dashboard";
 
-    if (!authCode) {
+    if (!code) {
         return new Response("No code provided", { status: 400 });
     }
 
-    const supabase = createAstroSupabase(context);
-    const { data, error } = await supabase.auth.exchangeCodeForSession(authCode);
+    const supabase = createClient(context);
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
-        console.error("Auth error:", error);
-        return redirect("/login?error=auth_failed");
+        return new Response(error.message, { status: 500 });
     }
 
-    console.log("Session exchanged successfully for user:", data.session?.user.email);
-    return redirect(next);
+    return context.redirect(next);
 };
