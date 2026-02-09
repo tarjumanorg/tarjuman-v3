@@ -13,7 +13,7 @@
         FileText,
         MapPin,
         Wallet,
-        PiggyBank,
+        Coins,
         Coffee,
         Armchair,
         Bike,
@@ -21,6 +21,7 @@
         Plane,
         Rocket,
         Zap,
+        Siren,
     } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
     import { createClient } from "../lib/supabase";
@@ -41,7 +42,7 @@
 
     const SPEED_LEVELS = [
         { level: 1, label: "Budget", icon: Wallet },
-        { level: 2, label: "Economy", icon: PiggyBank },
+        { level: 2, label: "Economy", icon: Coins },
         { level: 3, label: "Regular", icon: Coffee },
         { level: 4, label: "Standard", icon: Armchair },
         { level: 5, label: "Rapid", icon: Bike },
@@ -49,6 +50,7 @@
         { level: 7, label: "Express", icon: Plane },
         { level: 8, label: "Ultra", icon: Rocket },
         { level: 9, label: "Instant", icon: Zap },
+        { level: 10, label: "Urgent", icon: Siren },
     ];
 
     let isLoading = false;
@@ -70,7 +72,7 @@
     $: sliderColor = interpolateColor(
         START_COLOR,
         END_COLOR,
-        (10 - $orderStore.urgencyDays - 1) / 8,
+        (10 - $orderStore.urgencyDays - 1) / 9,
     );
 
     $: activeSpeed =
@@ -376,22 +378,33 @@
                             <p
                                 class="text-xs sm:text-sm font-medium text-muted-foreground"
                             >
-                                {$orderStore.urgencyDays} Hari
+                                {$orderStore.urgencyDays === 0
+                                    ? "Hari Ini"
+                                    : `${$orderStore.urgencyDays} Hari`}
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <div class="px-2 pt-4">
-                    <Slider
-                        value={[10 - $orderStore.urgencyDays]}
-                        onValueChange={(v: number[]) => {
-                            if (v && v.length > 0) setUrgency(10 - v[0]);
-                        }}
-                        min={1}
-                        max={9}
-                        step={1}
-                        class="cursor-pointer"
+                <div class="px-2 pt-4 flex items-center gap-4">
+                    <Wallet class="h-4 w-4 text-muted-foreground shrink-0" />
+                    <div class="flex-1">
+                        <Slider
+                            value={[10 - $orderStore.urgencyDays]}
+                            onValueChange={(v: number[]) => {
+                                if (v && v.length > 0) setUrgency(10 - v[0]);
+                            }}
+                            min={1}
+                            max={10}
+                            step={1}
+                            class="cursor-pointer"
+                        />
+                    </div>
+                    <Zap
+                        class="h-4 w-4 shrink-0 transition-all duration-300 {$orderStore.urgencyDays ===
+                        0
+                            ? 'text-yellow-400 scale-125 [filter:drop-shadow(0_0_8px_#facc15)]'
+                            : 'text-muted-foreground opacity-50'}"
                     />
                 </div>
             </div>
