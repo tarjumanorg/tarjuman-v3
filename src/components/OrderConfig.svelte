@@ -8,7 +8,20 @@
         toggleHardCopy,
         setAddress,
     } from "../stores/orderStore";
-    import { Trash2, FileText, MapPin } from "lucide-svelte";
+    import {
+        Trash2,
+        FileText,
+        MapPin,
+        Wallet,
+        PiggyBank,
+        Coffee,
+        Armchair,
+        Bike,
+        Car,
+        Plane,
+        Rocket,
+        Zap,
+    } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
     import { createClient } from "../lib/supabase";
     import { onMount } from "svelte";
@@ -23,10 +36,47 @@
     import { Switch } from "../lib/components/ui/switch";
     import { Button } from "../lib/components/ui/button";
     import { Label } from "../lib/components/ui/label";
+    import { addDays, format } from "date-fns";
+    import { id } from "date-fns/locale";
+
+    const SPEED_LEVELS = [
+        { level: 1, label: "Budget", icon: Wallet },
+        { level: 2, label: "Economy", icon: PiggyBank },
+        { level: 3, label: "Regular", icon: Coffee },
+        { level: 4, label: "Standard", icon: Armchair },
+        { level: 5, label: "Rapid", icon: Bike },
+        { level: 6, label: "Fast", icon: Car },
+        { level: 7, label: "Express", icon: Plane },
+        { level: 8, label: "Ultra", icon: Rocket },
+        { level: 9, label: "Instant", icon: Zap },
+    ];
 
     let isLoading = false;
     let isRestoring = true;
     let showLoginModal = false;
+
+    // Colors: Start (Grey: #9ca3af) -> End (Primary: #064E3B)
+    const START_COLOR = [156, 163, 175]; // #9ca3af
+    const END_COLOR = [6, 78, 59]; // #064E3B
+
+    function interpolateColor(start: number[], end: number[], factor: number) {
+        const result = start.map((startVal, i) => {
+            const endVal = end[i];
+            return Math.round(startVal + (endVal - startVal) * factor);
+        });
+        return `rgb(${result.join(",")})`;
+    }
+
+    $: sliderColor = interpolateColor(
+        START_COLOR,
+        END_COLOR,
+        (10 - $orderStore.urgencyDays - 1) / 8,
+    );
+
+    $: activeSpeed =
+        SPEED_LEVELS.find((s) => s.level === 10 - $orderStore.urgencyDays) ||
+        SPEED_LEVELS[0];
+    $: deliveryDate = addDays(new Date(), $orderStore.urgencyDays);
 
     onMount(async () => {
         // Try to restore state on load
@@ -283,31 +333,66 @@
         <!-- Configuration -->
         <div class="rounded-xl border bg-card p-6 space-y-8 shadow-sm">
             <!-- Speed Slider -->
-            <div class="space-y-4">
-                <div class="flex justify-between items-center">
-                    <Label
-                        class="font-semibold text-foreground text-base"
-                        for="urgency-slider">Kecepatan Terjemah</Label
-                    >
-                    <span
-                        class="text-primary font-bold bg-primary/10 px-3 py-1 rounded text-sm"
-                    >
-                        {$orderStore.urgencyDays} Hari
-                    </span>
+            <div class="space-y-6" style="--primary: {sliderColor}">
+                <div
+                    class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4"
+                >
+                    <!-- Left: Package Selection -->
+                    <div class="space-y-1">
+                        <Label
+                            class="text-xs text-muted-foreground uppercase tracking-wide font-semibold"
+                        >
+                            Pilih Paket
+                        </Label>
+                        <div class="flex items-center gap-3 text-primary">
+                            <div class="p-2 bg-primary/10 rounded-lg">
+                                <svelte:component
+                                    this={activeSpeed.icon}
+                                    class="h-6 w-6 sm:h-8 sm:w-8"
+                                />
+                            </div>
+                            <span
+                                class="text-xl sm:text-2xl font-bold leading-none"
+                                >{activeSpeed.label}</span
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Right: Estimation -->
+                    <div class="text-left sm:text-right space-y-1">
+                        <Label
+                            class="text-xs text-muted-foreground uppercase tracking-wide font-semibold"
+                        >
+                            Estimasi Selesai
+                        </Label>
+                        <div class="flex flex-col sm:items-end">
+                            <p
+                                class="text-base sm:text-lg font-bold text-foreground capitalize leading-snug"
+                            >
+                                {format(deliveryDate, "EEEE, d MMMM yyyy", {
+                                    locale: id,
+                                })}
+                            </p>
+                            <p
+                                class="text-xs sm:text-sm font-medium text-muted-foreground"
+                            >
+                                {$orderStore.urgencyDays} Hari
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
-                <Slider
-                    value={[$orderStore.urgencyDays]}
-                    onValueChange={(v) => {
-                        if (v && v.length > 0) setUrgency(v[0]);
-                    }}
-                    min={1}
-                    max={7}
-                    step={1}
-                />
-                <div class="flex justify-between text-xs text-muted-foreground">
-                    <span>Kilat (Mahal)</span>
-                    <span>Santai (Hemat)</span>
+                <div class="px-2 pt-4">
+                    <Slider
+                        value={[10 - $orderStore.urgencyDays]}
+                        onValueChange={(v: number[]) => {
+                            if (v && v.length > 0) setUrgency(10 - v[0]);
+                        }}
+                        min={1}
+                        max={9}
+                        step={1}
+                        class="cursor-pointer"
+                    />
                 </div>
             </div>
 
@@ -317,7 +402,7 @@
                         <Switch
                             id="hardCopy"
                             checked={$orderStore.hardCopy}
-                            onCheckedChange={(v) => toggleHardCopy(v)}
+                            onCheckedChange={(v: boolean) => toggleHardCopy(v)}
                         />
                     </div>
                     <div class="text-sm space-y-1">

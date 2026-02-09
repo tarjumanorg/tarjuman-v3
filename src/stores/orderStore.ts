@@ -16,22 +16,15 @@ export type OrderState = {
 };
 
 // Base price configuration
-const PRICE_PER_PAGE = 50000; // Base price (slowest)
-const URGENCY_MULTIPLIER = {
-    1: 2.0, // 1 day = 2x price
-    2: 1.8,
-    3: 1.6,
-    4: 1.4,
-    5: 1.2,
-    6: 1.1,
-    7: 1.0, // 7 days = base price
-} as Record<number, number>;
+// Base price configuration
+const BASE_PRICE = 75000; // Price for 9 days (slowest)
+const URGENCY_SURCHARGE_PER_DAY = 30000; // Cost per day reduced
 
 const HARD_COPY_FEE = 20000;
 
 export const orderStore = map<OrderState>({
     files: [],
-    urgencyDays: 7, // Default to relaxed
+    urgencyDays: 9, // Default to Budget (9 days)
     hardCopy: false,
     hardCopyAddress: '',
 });
@@ -39,9 +32,14 @@ export const orderStore = map<OrderState>({
 // Computed total price
 export const totalPrice = computed(orderStore, ({ files, urgencyDays, hardCopy }) => {
     const totalPages = files.reduce((acc, item) => acc + item.pageCount, 0);
-    const multiplier = URGENCY_MULTIPLIER[urgencyDays] || 1.0;
 
-    let price = totalPages * PRICE_PER_PAGE * multiplier;
+    // Calculate price per page based on urgency
+    // Days: 9 (Base) -> 8 (+30k) -> ... -> 1 (+240k)
+    // Formula: Base + (9 - days) * Surcharge
+    const daysReduced = 9 - urgencyDays;
+    const pricePerPage = BASE_PRICE + (daysReduced * URGENCY_SURCHARGE_PER_DAY);
+
+    let price = totalPages * pricePerPage;
 
     if (hardCopy) {
         price += HARD_COPY_FEE;
