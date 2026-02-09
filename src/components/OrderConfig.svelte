@@ -18,6 +18,7 @@
         clearOrderState,
     } from "../lib/storage";
     import LoginModal from "./LoginModal.svelte";
+    import { Slider } from "../lib/components/ui/slider";
 
     let isLoading = false;
     let isRestoring = true;
@@ -285,16 +286,14 @@
                     </span>
                 </div>
 
-                <input
-                    id="urgency-slider"
-                    type="range"
-                    min="1"
-                    max="7"
-                    step="1"
-                    class="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
-                    value={$orderStore.urgencyDays}
-                    on:input={(e) =>
-                        setUrgency(parseInt(e.currentTarget.value))}
+                <Slider
+                    value={[$orderStore.urgencyDays]}
+                    onValueChange={(v) => {
+                        if (v && v.length > 0) setUrgency(v[0]);
+                    }}
+                    min={1}
+                    max={7}
+                    step={1}
                 />
                 <div class="flex justify-between text-xs text-muted-foreground">
                     <span>Kilat (Mahal)</span>

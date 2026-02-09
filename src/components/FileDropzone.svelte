@@ -106,11 +106,12 @@
                 <Upload class="h-6 w-6 text-primary" />
             </div>
             <div class="text-sm">
-                <span class="font-semibold text-primary">Klik untuk upload</span
-                > atau seret file ke sini
+                <span class="font-semibold text-primary"
+                    >Upload Dokumen di sini
+                </span>
             </div>
             <p class="text-xs text-muted-foreground">
-                PDF, JPG, PNG (Max {maxSizeMB}MB)
+                Drop file di sini untuk cek estimasi biaya & waktu. (Max {maxSizeMB}MB)
             </p>
         </div>
     </div>
