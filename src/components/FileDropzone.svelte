@@ -10,7 +10,7 @@
 
     import { Button } from "$lib/components/ui/button";
     import { Card, CardContent } from "$lib/components/ui/card";
-    import { Upload, FileText, X, Loader2 } from "lucide-svelte";
+    import { Upload, FileText, X, Loader2, Plus, Minus } from "lucide-svelte";
 
     export let maxFiles = 10;
     export let maxSizeMB = 50;
@@ -81,13 +81,13 @@
 <div class="w-full space-y-4">
     <!-- Dropzone -->
     <div
-        class="relative rounded-lg border-2 border-dashed p-8 text-center transition-colors
+        class="relative rounded-lg border-2 border-dashed p-4 sm:p-8 text-center transition-colors
     {isDragging
             ? 'border-primary bg-primary/5'
             : 'border-muted-foreground/25 hover:border-primary/50'}"
-        on:dragover={handleDragOver}
-        on:dragleave={handleDragLeave}
-        on:drop={handleDrop}
+        ondragover={handleDragOver}
+        ondragleave={handleDragLeave}
+        ondrop={handleDrop}
         role="button"
         tabindex="0"
     >
@@ -96,7 +96,7 @@
             multiple
             accept=".pdf,image/*"
             class="absolute inset-0 cursor-pointer opacity-0"
-            on:change={handleFileInput}
+            onchange={handleFileInput}
         />
 
         <div class="flex flex-col items-center gap-2">
@@ -105,7 +105,7 @@
             >
                 <Upload class="h-6 w-6 text-primary" />
             </div>
-            <div class="text-sm">
+            <div class="text-sm sm:text-base">
                 <span class="font-semibold text-primary"
                     >Upload Dokumen di sini
                 </span>
@@ -155,24 +155,30 @@
                         >
                             <button
                                 class="text-muted-foreground hover:text-foreground disabled:opacity-50"
-                                on:click={() =>
+                                onclick={() =>
                                     updatePageCount(
                                         file.id,
                                         file.pageCount - 1,
                                     )}
-                                disabled={file.pageCount <= 1}>-</button
+                                disabled={file.pageCount <= 1}
+                                aria-label="Decrease page count"
                             >
+                                <Minus class="h-3 w-3" />
+                            </button>
                             <span class="w-4 text-center text-sm font-medium"
                                 >{file.pageCount}</span
                             >
                             <button
                                 class="text-muted-foreground hover:text-foreground"
-                                on:click={() =>
+                                onclick={() =>
                                     updatePageCount(
                                         file.id,
                                         file.pageCount + 1,
-                                    )}>+</button
+                                    )}
+                                aria-label="Increase page count"
                             >
+                                <Plus class="h-3 w-3" />
+                            </button>
                             <span class="text-xs text-muted-foreground"
                                 >hlm</span
                             >
@@ -183,7 +189,7 @@
                             variant="ghost"
                             size="icon"
                             class="h-8 w-8 text-muted-foreground hover:text-destructive"
-                            on:click={() => removeFile(file.id)}
+                            onclick={() => removeFile(file.id)}
                         >
                             <X class="h-4 w-4" />
                         </Button>

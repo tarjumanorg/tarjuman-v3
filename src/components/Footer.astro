@@ -1,0 +1,203 @@
+---
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="border-t bg-muted/30">
+    <div class="container mx-auto px-4 py-12 sm:py-16">
+        <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+            <!-- Brand -->
+            <div class="space-y-4">
+                <a
+                    href="/"
+                    class="font-serif text-xl font-bold text-primary tracking-tight"
+                >
+                    Tarjuman
+                </a>
+                <p class="text-sm text-muted-foreground leading-relaxed">
+                    Jasa Penerjemah Tersumpah Resmi untuk persyaratan beasiswa
+                    Study in Saudi & keperluan legal lainnya.
+                </p>
+                <div
+                    class="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary"
+                >
+                    <span class="flex h-2 w-2 rounded-full bg-primary"></span>
+                    Mitra Resmi SK Kemenkumham
+                </div>
+            </div>
+
+            <!-- Navigasi -->
+            <div class="space-y-4">
+                <h4 class="font-serif font-bold text-foreground">Navigasi</h4>
+                <ul class="space-y-3">
+                    <li>
+                        <a
+                            href="/"
+                            class="text-sm text-muted-foreground hover:text-primary transition-colors"
+                        >
+                            Beranda
+                        </a>
+                    </li>
+                    <li>
+                        <a
+                            href="/dashboard"
+                            class="text-sm text-muted-foreground hover:text-primary transition-colors"
+                        >
+                            Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a
+                            href="/login"
+                            class="text-sm text-muted-foreground hover:text-primary transition-colors"
+                        >
+                            Masuk / Daftar
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Layanan -->
+            <div class="space-y-4">
+                <h4 class="font-serif font-bold text-foreground">Layanan</h4>
+                <ul class="space-y-3">
+                    <li>
+                        <span class="text-sm text-muted-foreground">
+                            Terjemah Tersumpah
+                        </span>
+                    </li>
+                    <li>
+                        <span class="text-sm text-muted-foreground">
+                            Legalisir Kemenkumham
+                        </span>
+                    </li>
+                    <li>
+                        <span class="text-sm text-muted-foreground">
+                            Legalisir Kemenlu
+                        </span>
+                    </li>
+                    <li>
+                        <span class="text-sm text-muted-foreground">
+                            Apostille
+                        </span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Kontak -->
+            <div class="space-y-4">
+                <h4 class="font-serif font-bold text-foreground">Kontak</h4>
+                <ul class="space-y-3">
+                    <li>
+                        <a
+                            href="https://wa.me/62XXXXXXXXXX"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="lucide lucide-message-circle"
+                                ><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"
+                                ></path></svg
+                            >
+                            WhatsApp
+                        </a>
+                    </li>
+                    <li>
+                        <a
+                            href="mailto:hello@tarjuman.org"
+                            class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="lucide lucide-mail"
+                                ><rect width="20" height="16" x="2" y="4" rx="2"
+                                ></rect><path
+                                    d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"
+                                ></path></svg
+                            >
+                            hello@tarjuman.org
+                        </a>
+                    </li>
+                    <li>
+                        <a
+                            href="https://instagram.com/tarjuman"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="lucide lucide-instagram"
+                                ><rect
+                                    width="20"
+                                    height="20"
+                                    x="2"
+                                    y="2"
+                                    rx="5"
+                                    ry="5"></rect><path
+                                    d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"
+                                ></path><line
+                                    x1="17.5"
+                                    x2="17.51"
+                                    y1="6.5"
+                                    y2="6.5"></line></svg
+                            >
+                            @tarjuman
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="border-t border-border/50">
+        <div
+            class="container mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-4"
+        >
+            <p class="text-xs text-muted-foreground">
+                &copy; {currentYear} Tarjuman. Hak cipta dilindungi.
+            </p>
+            <div class="flex items-center gap-4">
+                <a
+                    href="#"
+                    class="text-xs text-muted-foreground hover:text-primary transition-colors"
+                >
+                    Syarat & Ketentuan
+                </a>
+                <span class="text-border">·</span>
+                <a
+                    href="#"
+                    class="text-xs text-muted-foreground hover:text-primary transition-colors"
+                >
+                    Kebijakan Privasi
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>

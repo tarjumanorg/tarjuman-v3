@@ -22,6 +22,8 @@
         Rocket,
         Zap,
         Siren,
+        Plus,
+        Minus,
     } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
     import { createClient } from "../lib/supabase";
@@ -57,9 +59,10 @@
     let isRestoring = true;
     let showLoginModal = false;
 
-    // Colors: Start (Grey: #9ca3af) -> End (Primary: #064E3B)
+    // Colors: Start (Grey: #9ca3af) -> Mid (Primary Green: #064E3B) -> Urgent (Orange: #f59e0b)
     const START_COLOR = [156, 163, 175]; // #9ca3af
-    const END_COLOR = [6, 78, 59]; // #064E3B
+    const PRIMARY_GREEN = [6, 78, 59]; // #064E3B
+    const URGENT_ORANGE = [245, 158, 11]; // #f59e0b (amber-500)
 
     function interpolateColor(start: number[], end: number[], factor: number) {
         const result = start.map((startVal, i) => {
@@ -69,11 +72,14 @@
         return `rgb(${result.join(",")})`;
     }
 
-    $: sliderColor = interpolateColor(
-        START_COLOR,
-        END_COLOR,
-        (10 - $orderStore.urgencyDays - 1) / 9,
-    );
+    $: sliderColor =
+        $orderStore.urgencyDays === 0
+            ? `rgb(${URGENT_ORANGE.join(",")})`
+            : interpolateColor(
+                  START_COLOR,
+                  PRIMARY_GREEN,
+                  (9 - $orderStore.urgencyDays) / 8,
+              );
 
     $: activeSpeed =
         SPEED_LEVELS.find((s) => s.level === 10 - $orderStore.urgencyDays) ||
@@ -205,14 +211,14 @@
                     for="file-upload"
                     class="cursor-pointer inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
                 >
-                    <span class="text-lg leading-none">+</span> Tambah File
+                    <Plus class="h-3 w-3" /> Tambah File
                     <input
                         id="file-upload"
                         type="file"
                         multiple
                         accept=".pdf,image/*"
                         class="hidden"
-                        on:change={async (e) => {
+                        onchange={async (e) => {
                             const target = e.target as HTMLInputElement;
                             if (target.files) {
                                 const { countPdfPages } = await import(
@@ -248,7 +254,7 @@
             </div>
             {#each $orderStore.files as file (file.id)}
                 <div
-                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-lg border bg-card p-4 shadow-sm"
+                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-lg border bg-card p-3 sm:p-4 shadow-sm"
                     transition:fade
                 >
                     <div class="flex items-center gap-4">
@@ -294,13 +300,16 @@
                                     variant="ghost"
                                     size="icon-sm"
                                     class="h-8 w-8 rounded-none rounded-l-md"
-                                    on:click={() =>
+                                    onclick={() =>
                                         updatePageCount(
                                             file.id,
                                             file.pageCount - 1,
                                         )}
-                                    disabled={file.pageCount <= 1}>-</Button
+                                    disabled={file.pageCount <= 1}
+                                    aria-label="Decrease page count"
                                 >
+                                    <Minus class="h-3 w-3" />
+                                </Button>
                                 <span
                                     class="min-w-[2rem] text-center text-sm font-medium"
                                     >{file.pageCount}</span
@@ -309,12 +318,15 @@
                                     variant="ghost"
                                     size="icon-sm"
                                     class="h-8 w-8 rounded-none rounded-r-md"
-                                    on:click={() =>
+                                    onclick={() =>
                                         updatePageCount(
                                             file.id,
                                             file.pageCount + 1,
-                                        )}>+</Button
+                                        )}
+                                    aria-label="Increase page count"
                                 >
+                                    <Plus class="h-3 w-3" />
+                                </Button>
                             </div>
                         </div>
 
@@ -322,7 +334,7 @@
                             variant="ghost"
                             size="icon"
                             class="text-destructive hover:text-destructive hover:bg-destructive/10 rounded-full h-8 w-8"
-                            on:click={() => removeFile(file.id)}
+                            onclick={() => removeFile(file.id)}
                             aria-label="Remove file"
                         >
                             <Trash2 class="h-4 w-4" />
@@ -333,7 +345,12 @@
         </div>
 
         <!-- Configuration -->
-        <div class="rounded-xl border bg-card p-6 space-y-8 shadow-sm">
+        <div
+            class="rounded-xl border bg-card p-6 space-y-8 shadow-sm transition-all duration-500 {$orderStore.urgencyDays ===
+            0
+                ? 'border-yellow-500/50 ring-4 ring-yellow-500/10 shadow-yellow-500/5'
+                : 'border-border'}"
+        >
             <!-- Speed Slider -->
             <div class="space-y-6" style="--primary: {sliderColor}">
                 <div
@@ -432,7 +449,7 @@
                 </div>
 
                 {#if $orderStore.hardCopy}
-                    <div class="ml-14" transition:slide>
+                    <div class="ml-0 mt-4 sm:ml-14 sm:mt-0" transition:slide>
                         <Label
                             class="block text-sm font-medium mb-2"
                             for="shipping-address"
@@ -447,8 +464,11 @@
                                 class="pl-10 min-h-[100px] resize-none"
                                 placeholder="Contoh: Jl. Sudirman No. 10, RT 01/RW 02, Jakarta Selatan, 12190. (Sertakan Patokan)"
                                 value={$orderStore.hardCopyAddress}
-                                on:input={(e) =>
-                                    setAddress(e.currentTarget.value)}
+                                oninput={(
+                                    e: Event & {
+                                        currentTarget: HTMLTextAreaElement;
+                                    },
+                                ) => setAddress(e.currentTarget.value)}
                             />
                         </div>
                     </div>
@@ -474,7 +494,7 @@
                 <Button
                     size="lg"
                     class="flex-1 sm:flex-none px-6 sm:px-8 rounded-full shadow-lg transition-transform active:scale-95 text-base"
-                    on:click={handlePayment}
+                    onclick={handlePayment}
                     disabled={isLoading}
                 >
                     {#if isLoading}
@@ -493,6 +513,6 @@
 
     <LoginModal
         isOpen={showLoginModal}
-        on:close={() => (showLoginModal = false)}
+        onclose={() => (showLoginModal = false)}
     />
 {/if}

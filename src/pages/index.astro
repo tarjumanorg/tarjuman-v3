@@ -51,7 +51,7 @@ import OrderConfig from "../components/OrderConfig.svelte";
 						class="mx-auto max-w-2xl w-full rounded-2xl border bg-card p-2 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300"
 					>
 						<div
-							class="rounded-xl border border-dashed border-border bg-muted/30 p-8 transition-colors hover:bg-muted/50"
+							class="rounded-xl border border-dashed border-border bg-muted/30 p-4 sm:p-8 transition-colors hover:bg-muted/50"
 						>
 							<FileDropzone client:load />
 						</div>
@@ -95,50 +95,305 @@ import OrderConfig from "../components/OrderConfig.svelte";
 				}
 			});
 		</script>
+
+		<!-- 1. The Modern Process -->
+		<section class="border-y bg-background py-16 sm:py-24">
+			<div class="container mx-auto px-4">
+				<div class="text-center max-w-2xl mx-auto mb-16">
+					<h2
+						class="text-3xl font-bold font-serif tracking-tight text-foreground sm:text-4xl mb-4"
+					>
+						Cara Kerja Modern
+					</h2>
+					<p class="text-muted-foreground text-lg">
+						Lupakan cara lama yang ribet. Cukup 3 langkah mudah
+						untuk mendapatkan terjemahan tersumpah.
+					</p>
+				</div>
+
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+					<!-- Connector Line (Desktop Only) -->
+					<div
+						class="hidden md:block absolute top-12 left-[16%] right-[16%] h-0.5 bg-border -z-10"
+					>
+					</div>
+
+					<!-- Step 1 -->
+					<div
+						class="flex flex-col items-center text-center space-y-4"
+					>
+						<div
+							class="h-24 w-24 rounded-full bg-background border-2 border-primary/20 flex items-center justify-center text-primary shadow-lg ring-8 ring-background z-10"
+						>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="40"
+								height="40"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								class="lucide lucide-upload-cloud"
+								><path
+									d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"
+								></path><path d="M12 12v9"></path><path
+									d="m16 16-4-4-4 4"></path></svg
+							>
+						</div>
+						<div class="space-y-2">
+							<span
+								class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
+								>1</span
+							>
+							<h3 class="text-xl font-bold">Upload Dokumen</h3>
+							<p
+								class="text-muted-foreground text-sm max-w-[250px] mx-auto"
+							>
+								Foto atau scan dokumenmu. Upload langsung di
+								halaman ini.
+							</p>
+						</div>
+					</div>
+
+					<!-- Step 2 -->
+					<div
+						class="flex flex-col items-center text-center space-y-4"
+					>
+						<div
+							class="h-24 w-24 rounded-full bg-background border-2 border-primary/20 flex items-center justify-center text-primary shadow-lg ring-8 ring-background z-10"
+						>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="40"
+								height="40"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								class="lucide lucide-zap"
+								><path
+									d="M4 14.71 13.18 3l-1.35 6.3 8.13-1.02L10.82 20.88 12.17 14.59 4 14.71z"
+								></path></svg
+							>
+						</div>
+						<div class="space-y-2">
+							<span
+								class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
+								>2</span
+							>
+							<h3 class="text-xl font-bold">Cek Harga & Bayar</h3>
+							<p
+								class="text-muted-foreground text-sm max-w-[250px] mx-auto"
+							>
+								Harga & estimasi waktu muncul <strong
+									>instan</strong
+								>. Bayar mudah via QRIS, E-Wallet (Gopay, Dana,
+								dll) atau Transfer Bank.
+							</p>
+						</div>
+					</div>
+
+					<!-- Step 3 -->
+					<div
+						class="flex flex-col items-center text-center space-y-4"
+					>
+						<div
+							class="h-24 w-24 rounded-full bg-background border-2 border-primary/20 flex items-center justify-center text-primary shadow-lg ring-8 ring-background z-10"
+						>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="40"
+								height="40"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								class="lucide lucide-file-check"
+								><path
+									d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"
+								></path><path d="M14 2v4a2 2 0 0 0 2 2h4"
+								></path><path d="m9 15 2 2 4-4"></path></svg
+							>
+						</div>
+						<div class="space-y-2">
+							<span
+								class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
+								>3</span
+							>
+							<h3 class="text-xl font-bold">Terima Hasil</h3>
+							<p
+								class="text-muted-foreground text-sm max-w-[250px] mx-auto"
+							>
+								Download hasil langsung dari dashboard (tanpa
+								cek email). Hard copy (cap basah) tetap dikirim
+								via JNE.
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- 2. The Feature Matrix (Why Us) -->
+		<section class="border-b bg-muted/30 py-16 sm:py-24">
+			<div class="container mx-auto px-4">
+				<div class="text-center max-w-2xl mx-auto mb-16">
+					<h2
+						class="text-3xl font-bold font-serif tracking-tight text-foreground sm:text-4xl mb-4"
+					>
+						Kenapa Tarjuman?
+					</h2>
+					<p class="text-muted-foreground text-lg">
+						Layanan spesialis yang mengerti kebutuhan dokumen legal
+						& studi Anda.
+					</p>
+				</div>
+
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+					<!-- Card 1: Speed (Differentator) -->
+					<div
+						class="flex flex-col p-8 rounded-2xl bg-background border shadow-sm hover:shadow-md transition-all duration-300"
+					>
+						<div
+							class="h-12 w-12 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 mb-6"
+						>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="24"
+								height="24"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								class="lucide lucide-zap"
+								><path
+									d="M4 14.71 13.18 3l-1.35 6.3 8.13-1.02L10.82 20.88 12.17 14.59 4 14.71z"
+								></path></svg
+							>
+						</div>
+						<h3 class="text-xl font-bold mb-3">
+							Tanpa Chat & Menunggu
+						</h3>
+						<p
+							class="text-muted-foreground text-sm leading-relaxed"
+						>
+							Sistem otomatis. Upload file, <strong
+								>langsung muncul harga</strong
+							>. Tidak perlu "PM admin" atau tunggu balasan
+							WhatsApp yang lama.
+						</p>
+					</div>
+
+					<!-- Card 2: Niche (Education) -->
+					<div
+						class="flex flex-col p-8 rounded-2xl bg-background border shadow-sm hover:shadow-md transition-all duration-300"
+					>
+						<div
+							class="h-12 w-12 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 mb-6"
+						>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="24"
+								height="24"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								class="lucide lucide-graduation-cap"
+								><path
+									d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.599 9.084a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"
+								></path><path
+									d="M6 13v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6"
+								></path><path d="M22 10v6"></path></svg
+							>
+						</div>
+						<h3 class="text-xl font-bold mb-3">
+							Spesialis Beasiswa
+						</h3>
+						<p
+							class="text-muted-foreground text-sm leading-relaxed"
+						>
+							Format & terminologi dokumen disesuaikan khusus
+							untuk <span class="font-medium text-foreground"
+								>studyinsaudi.moe.gov.sa</span
+							> & Universitas Global lainnya.
+						</p>
+					</div>
+
+					<!-- Card 3: Authority (Legal) -->
+					<div
+						class="flex flex-col p-8 rounded-2xl bg-background border shadow-sm hover:shadow-md transition-all duration-300"
+					>
+						<div
+							class="h-12 w-12 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 mb-6"
+						>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="24"
+								height="24"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								class="lucide lucide-shield-check"
+								><path
+									d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"
+								></path><path d="m9 12 2 2 4-4"></path></svg
+							>
+						</div>
+						<h3 class="text-xl font-bold mb-3">
+							Legal & Tersumpah
+						</h3>
+						<p
+							class="text-muted-foreground text-sm leading-relaxed"
+						>
+							Penerjemah resmi dengan SK Kemenkumham. Hasil
+							terjemahan valid dan diakui oleh Kemenlu & Kedutaan
+							Besar.
+						</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- 3. Success Metrics (Social Proof) -->
+		<section class="bg-primary py-12 text-primary-foreground">
+			<div class="container mx-auto px-4">
+				<div
+					class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-primary-foreground/20"
+				>
+					<div class="py-4 md:py-0">
+						<p class="text-4xl font-bold mb-2">5,000+</p>
+						<p class="text-primary-foreground/80 font-medium">
+							Dokumen Beasiswa Terproses
+						</p>
+					</div>
+					<div class="py-4 md:py-0">
+						<p class="text-4xl font-bold mb-2">50+</p>
+						<p class="text-primary-foreground/80 font-medium">
+							Universitas Global Tujuan
+						</p>
+					</div>
+					<div class="py-4 md:py-0">
+						<p class="text-4xl font-bold mb-2">100%</p>
+						<p class="text-primary-foreground/80 font-medium">
+							Keamanan Data Terjamin
+						</p>
+					</div>
+				</div>
+			</div>
+		</section>
 	</main>
 </Layout>
-
-<!-- Trust Badges -->
-<section class="border-y bg-muted/30 py-12">
-	<div class="container mx-auto px-4 text-center">
-		<!-- UPDATED: Judul diubah agar aman secara hukum -->
-		<!-- Jangan pakai "Dipercaya Oleh" jika mereka bukan klien langsung -->
-		<p
-			class="mb-6 text-sm font-medium text-muted-foreground uppercase tracking-widest"
-		>
-			Hasil Terjemahan Diterima Di
-		</p>
-		<div
-			class="grid grid-cols-2 gap-8 md:grid-cols-4 opacity-70 grayscale transition-all hover:grayscale-0"
-		>
-			<div
-				class="flex items-center justify-center gap-2 p-4 rounded-lg hover:bg-background/50 transition-colors"
-			>
-				<span class="font-serif text-lg font-bold text-foreground"
-					>Kemenkumham</span
-				>
-			</div>
-			<div
-				class="flex items-center justify-center gap-2 p-4 rounded-lg hover:bg-background/50 transition-colors"
-			>
-				<span class="font-serif text-lg font-bold text-foreground"
-					>Kemenlu</span
-				>
-			</div>
-			<div
-				class="flex items-center justify-center gap-2 p-4 rounded-lg hover:bg-background/50 transition-colors"
-			>
-				<span class="font-serif text-lg font-bold text-foreground"
-					>Kedutaan Besar</span
-				>
-			</div>
-			<div
-				class="flex items-center justify-center gap-2 p-4 rounded-lg hover:bg-background/50 transition-colors"
-			>
-				<span class="font-serif text-lg font-bold text-foreground"
-					>Universitas Global</span
-				>
-			</div>
-		</div>
-	</div>
-</section>

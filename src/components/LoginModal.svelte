@@ -1,28 +1,27 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import {
         Dialog,
         DialogContent,
         DialogHeader,
         DialogTitle,
-        DialogDescription,
     } from "$lib/components/ui/dialog";
     import { Button } from "$lib/components/ui/button";
     import { Lock } from "lucide-svelte";
 
-    export let isOpen = false;
-
-    const dispatch = createEventDispatcher();
+    let {
+        isOpen = $bindable(false),
+        onclose,
+    }: {
+        isOpen: boolean;
+        onclose?: () => void;
+    } = $props();
 
     function close() {
-        dispatch("close");
+        if (onclose) onclose();
+        isOpen = false;
     }
 
     function loginWithGoogle() {
-        // Redirect to Google Auth
-        // The redirects should be handled by the parent or here directly
-        // Based on previous flow, we passed ?redirect=/
-        // We can just go to the signin endpoint which handles the redirect param
         window.location.href = `/api/auth/signin?redirect=/`;
     }
 </script>
@@ -60,7 +59,7 @@
                 <Button
                     variant="outline"
                     class="w-full h-12 gap-3"
-                    on:click={loginWithGoogle}
+                    onclick={loginWithGoogle}
                 >
                     <svg class="h-5 w-5" viewBox="0 0 24 24">
                         <path
