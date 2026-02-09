@@ -19,6 +19,10 @@
     } from "../lib/storage";
     import LoginModal from "./LoginModal.svelte";
     import { Slider } from "../lib/components/ui/slider";
+    import { Textarea } from "../lib/components/ui/textarea";
+    import { Switch } from "../lib/components/ui/switch";
+    import { Button } from "../lib/components/ui/button";
+    import { Label } from "../lib/components/ui/label";
 
     let isLoading = false;
     let isRestoring = true;
@@ -234,37 +238,43 @@
                             <div
                                 class="flex items-center rounded-md border bg-background"
                             >
-                                <button
-                                    class="px-2 py-1 text-sm hover:bg-muted"
+                                <Button
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    class="h-8 w-8 rounded-none rounded-l-md"
                                     on:click={() =>
                                         updatePageCount(
                                             file.id,
                                             file.pageCount - 1,
                                         )}
-                                    disabled={file.pageCount <= 1}>-</button
+                                    disabled={file.pageCount <= 1}>-</Button
                                 >
                                 <span
                                     class="min-w-[2rem] text-center text-sm font-medium"
                                     >{file.pageCount}</span
                                 >
-                                <button
-                                    class="px-2 py-1 text-sm hover:bg-muted"
+                                <Button
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    class="h-8 w-8 rounded-none rounded-r-md"
                                     on:click={() =>
                                         updatePageCount(
                                             file.id,
                                             file.pageCount + 1,
-                                        )}>+</button
+                                        )}>+</Button
                                 >
                             </div>
                         </div>
 
-                        <button
-                            class="text-destructive hover:bg-destructive/10 p-2 rounded-full transition-colors"
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            class="text-destructive hover:text-destructive hover:bg-destructive/10 rounded-full h-8 w-8"
                             on:click={() => removeFile(file.id)}
                             aria-label="Remove file"
                         >
                             <Trash2 class="h-4 w-4" />
-                        </button>
+                        </Button>
                     </div>
                 </div>
             {/each}
@@ -275,9 +285,9 @@
             <!-- Speed Slider -->
             <div class="space-y-4">
                 <div class="flex justify-between items-center">
-                    <label
-                        class="font-semibold text-foreground"
-                        for="urgency-slider">Kecepatan Terjemah</label
+                    <Label
+                        class="font-semibold text-foreground text-base"
+                        for="urgency-slider">Kecepatan Terjemah</Label
                     >
                     <span
                         class="text-primary font-bold bg-primary/10 px-3 py-1 rounded text-sm"
@@ -301,24 +311,20 @@
                 </div>
             </div>
 
-            <!-- Hard Copy Toggle -->
             <div class="space-y-4 pt-4 border-t">
-                <div class="flex items-start gap-3">
-                    <div class="flex items-center h-5">
-                        <input
+                <div class="flex items-start gap-4">
+                    <div class="flex items-center h-6">
+                        <Switch
                             id="hardCopy"
-                            type="checkbox"
-                            class="w-4 h-4 text-primary border-border rounded focus:ring-primary"
                             checked={$orderStore.hardCopy}
-                            on:change={(e) =>
-                                toggleHardCopy(e.currentTarget.checked)}
+                            onCheckedChange={(v) => toggleHardCopy(v)}
                         />
                     </div>
-                    <div class="text-sm">
-                        <label
+                    <div class="text-sm space-y-1">
+                        <Label
                             for="hardCopy"
-                            class="font-medium text-foreground"
-                            >Kirim Hard Copy (Cap Basah)?</label
+                            class="font-medium text-foreground text-base cursor-pointer"
+                            >Kirim Hard Copy (Cap Basah)?</Label
                         >
                         <p class="text-muted-foreground">
                             Kami akan kirim dokumen asli dengan cap basah ke
@@ -328,25 +334,24 @@
                 </div>
 
                 {#if $orderStore.hardCopy}
-                    <div class="ml-7" transition:slide>
-                        <label
-                            class="block text-sm font-medium mb-1"
+                    <div class="ml-14" transition:slide>
+                        <Label
+                            class="block text-sm font-medium mb-2"
                             for="shipping-address"
-                            >Alamat Pengiriman Lengkap</label
+                            >Alamat Pengiriman Lengkap</Label
                         >
                         <div class="relative">
                             <MapPin
-                                class="absolute left-3 top-3 h-4 w-4 text-muted-foreground"
+                                class="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10"
                             />
-                            <textarea
+                            <Textarea
                                 id="shipping-address"
-                                class="w-full rounded-md border border-input bg-transparent pl-10 pr-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-[80px]"
-                                rows="3"
+                                class="pl-10 min-h-[100px] resize-none"
                                 placeholder="Contoh: Jl. Sudirman No. 10, RT 01/RW 02, Jakarta Selatan, 12190. (Sertakan Patokan)"
                                 value={$orderStore.hardCopyAddress}
                                 on:input={(e) =>
                                     setAddress(e.currentTarget.value)}
-                            ></textarea>
+                            />
                         </div>
                     </div>
                 {/if}
@@ -368,8 +373,9 @@
                         {formatPrice($totalPrice)}
                     </p>
                 </div>
-                <button
-                    class="flex-1 sm:flex-none px-6 sm:px-8 py-3 rounded-full bg-primary text-primary-foreground font-bold shadow-lg hover:bg-primary/90 transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                <Button
+                    size="lg"
+                    class="flex-1 sm:flex-none px-6 sm:px-8 rounded-full shadow-lg transition-transform active:scale-95 text-base"
                     on:click={handlePayment}
                     disabled={isLoading}
                 >
@@ -380,7 +386,7 @@
                     {:else}
                         Lanjut Pembayaran
                     {/if}
-                </button>
+                </Button>
             </div>
         </div>
         <!-- Spacer for mobile to prevent content being hidden behind footer -->

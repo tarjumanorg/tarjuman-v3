@@ -1,6 +1,13 @@
 <script lang="ts">
-    import { fade, fly } from "svelte/transition";
     import { createEventDispatcher } from "svelte";
+    import {
+        Dialog,
+        DialogContent,
+        DialogHeader,
+        DialogTitle,
+        DialogDescription,
+    } from "$lib/components/ui/dialog";
+    import { Button } from "$lib/components/ui/button";
     import { Lock } from "lucide-svelte";
 
     export let isOpen = false;
@@ -20,28 +27,21 @@
     }
 </script>
 
-{#if isOpen}
-    <!-- Backdrop -->
-    <div
-        class="fixed inset-0 bg-black/50 z-[60] backdrop-blur-sm"
-        role="button"
-        tabindex="-1"
-        transition:fade
-        on:click={close}
-        on:keydown={(e) => e.key === "Escape" && close()}
-    ></div>
+<Dialog
+    open={isOpen}
+    onOpenChange={(open) => {
+        if (!open) close();
+    }}
+>
+    <DialogContent class="sm:max-w-[400px]">
+        <DialogHeader>
+            <DialogTitle class="hidden">Login Required</DialogTitle>
+        </DialogHeader>
 
-    <!-- Modal / Bottom Sheet -->
-    <div
-        class="fixed bottom-0 left-0 right-0 sm:top-1/2 sm:left-1/2 sm:bottom-auto sm:-translate-x-1/2 sm:-translate-y-1/2
-               bg-background text-foreground rounded-t-2xl sm:rounded-2xl shadow-2xl z-[70]
-               w-full sm:w-[400px] p-6 sm:p-8"
-        transition:fly={{ y: 200, duration: 300 }}
-    >
-        <div class="flex flex-col items-center text-center space-y-6">
+        <div class="flex flex-col items-center text-center space-y-6 pt-4">
             <!-- Icon -->
             <div
-                class="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center"
+                class="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center p-4 ring-1 ring-primary/20"
             >
                 <Lock class="h-8 w-8 text-primary" />
             </div>
@@ -57,9 +57,10 @@
 
             <!-- Actions -->
             <div class="w-full space-y-3">
-                <button
+                <Button
+                    variant="outline"
+                    class="w-full h-12 gap-3"
                     on:click={loginWithGoogle}
-                    class="flex w-full items-center justify-center gap-3 rounded-full border border-input bg-white px-4 py-3 font-medium text-gray-700 shadow-sm transition-transform active:scale-95 hover:bg-gray-50"
                 >
                     <svg class="h-5 w-5" viewBox="0 0 24 24">
                         <path
@@ -80,7 +81,7 @@
                         ></path>
                     </svg>
                     Lanjut dengan Google
-                </button>
+                </Button>
 
                 <a
                     href="/login?redirect=/"
@@ -90,5 +91,5 @@
                 </a>
             </div>
         </div>
-    </div>
-{/if}
+    </DialogContent>
+</Dialog>
