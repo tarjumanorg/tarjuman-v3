@@ -24,8 +24,11 @@
     <!-- Backdrop -->
     <div
         class="fixed inset-0 bg-black/50 z-[60] backdrop-blur-sm"
+        role="button"
+        tabindex="-1"
         transition:fade
         on:click={close}
+        on:keydown={(e) => e.key === "Escape" && close()}
     ></div>
 
     <!-- Modal / Bottom Sheet -->

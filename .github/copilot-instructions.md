@@ -2,6 +2,6 @@
 2. Always break down plan to phases, can create `.md` files to track the progress so you don't get lost.
 3. **Always research before implementing something new, with `context7` or web search**
 4. If an error is persistent, step back to research the root cause.
-5. The main rule is **Efficiency** and **DRY**.
+5. The main rule is **Efficiency** and **DRY**. always check if the project already have things.
 6. **always** use `supabase-tarjuman` if you need *anything* with supabase.
 7. **always** use `shadcn-svelte` components if possible.

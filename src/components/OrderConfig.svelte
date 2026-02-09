@@ -370,7 +370,7 @@
                     </p>
                 </div>
                 <button
-                    class="flex-1 sm:flex-none px-6 sm:px-8 py-3 rounded-full bg-accent text-accent-foreground font-bold shadow-lg hover:bg-accent/90 transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="flex-1 sm:flex-none px-6 sm:px-8 py-3 rounded-full bg-primary text-primary-foreground font-bold shadow-lg hover:bg-primary/90 transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     on:click={handlePayment}
                     disabled={isLoading}
                 >
