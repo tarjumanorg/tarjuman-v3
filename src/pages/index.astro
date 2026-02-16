@@ -6,8 +6,15 @@ import OrderConfig from "../components/OrderConfig.svelte";
 
 <Layout title="Tarjuman - Jasa Penerjemah Tersumpah Modern">
 	<main class="min-h-screen bg-background">
+		<!-- Promo Banner -->
+		<div class="bg-gradient-to-r from-primary/90 to-primary text-primary-foreground px-4 py-3 text-center">
+			<p class="text-sm font-medium">
+				🎉 <span class="font-bold">PROMO LAUNCH:</span> Gunakan kode <span class="font-bold underline cursor-pointer bg-white/20 px-1.5 py-0.5 rounded ml-1 border border-white/30 hover:bg-white/30 transition-colors" onclick="navigator.clipboard.writeText('LAUNCH50'); alert('Kode LAUNCH50 disalin!')">LAUNCH50</span> untuk diskon 30% (Terbatas untuk 50 orang pertama!)
+			</p>
+		</div>
+
 		<!-- Hero Section -->
-		<section class="relative overflow-hidden pt-4 pb-24 sm:pt-8 sm:pb-32">
+		<section class="relative overflow-hidden pt-4 pb-16 sm:pt-8 sm:pb-24">
 			<div
 				class="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"
 			>
@@ -368,28 +375,115 @@ import OrderConfig from "../components/OrderConfig.svelte";
 			</div>
 		</section>
 
-		<!-- 3. Success Metrics (Social Proof) -->
+		<!-- 3. Kenapa Bukan WhatsApp? -->
+		<section class="border-b bg-background py-16 sm:py-24">
+			<div class="container mx-auto px-4">
+				<div class="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
+					<h2
+						class="text-3xl font-bold font-serif tracking-tight text-foreground sm:text-4xl mb-4"
+					>
+						Kenapa Bukan WhatsApp?
+					</h2>
+					<p class="text-muted-foreground text-lg">
+						Kami membangun Tarjuman untuk mengatasi ribetnya proses
+						terjemahan via chat.
+					</p>
+				</div>
+
+				<div
+					class="max-w-4xl mx-auto overflow-hidden rounded-2xl border shadow-lg"
+				>
+					<!-- Header -->
+					<div class="grid grid-cols-2 bg-muted/50 border-b">
+						<div
+							class="p-4 sm:p-6 font-bold text-center border-r text-muted-foreground"
+						>
+							Cara Lama (WhatsApp)
+						</div>
+						<div
+							class="p-4 sm:p-6 font-bold text-center text-primary"
+						>
+							Tarjuman
+						</div>
+					</div>
+
+					<!-- Rows -->
+					<div class="divide-y">
+						<div class="grid grid-cols-2">
+							<div
+								class="p-4 sm:p-6 text-sm sm:text-base border-r text-muted-foreground flex items-center justify-center text-center italic"
+							>
+								"Pak, kalau ini berapa ya?" — tunggu balasan
+							</div>
+							<div
+								class="p-4 sm:p-6 text-sm sm:text-base flex items-center justify-center text-center font-medium"
+							>
+								Upload file, harga muncul otomatis.
+							</div>
+						</div>
+						<div class="grid grid-cols-2 bg-muted/20">
+							<div
+								class="p-4 sm:p-6 text-sm sm:text-base border-r text-muted-foreground flex items-center justify-center text-center italic"
+							>
+								"Pak, sudah sampai mana ya prosesnya?"
+							</div>
+							<div
+								class="p-4 sm:p-6 text-sm sm:text-base flex items-center justify-center text-center font-medium"
+							>
+								Dashboard tracking real-time.
+							</div>
+						</div>
+						<div class="grid grid-cols-2">
+							<div
+								class="p-4 sm:p-6 text-sm sm:text-base border-r text-muted-foreground flex items-center justify-center text-center italic"
+							>
+								Transfer manual, screenshot bukti bayar.
+							</div>
+							<div
+								class="p-4 sm:p-6 text-sm sm:text-base flex items-center justify-center text-center font-medium"
+							>
+								Bayar langsung via QRIS atau E-Wallet.
+							</div>
+						</div>
+						<div class="grid grid-cols-2 bg-muted/20">
+							<div
+								class="p-4 sm:p-6 text-sm sm:text-base border-r text-muted-foreground flex items-center justify-center text-center italic"
+							>
+								Dokumen tercecer di riwayat chat.
+							</div>
+							<div
+								class="p-4 sm:p-6 text-sm sm:text-base flex items-center justify-center text-center font-medium"
+							>
+								Arsip rapi, download hasil langsung.
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- 4. Honest Value Props -->
 		<section class="bg-primary py-12 text-primary-foreground">
 			<div class="container mx-auto px-4">
 				<div
 					class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-primary-foreground/20"
 				>
 					<div class="py-4 md:py-0">
-						<p class="text-4xl font-bold mb-2">5,000+</p>
+						<p class="text-3xl font-bold mb-2">Rp 75.000</p>
 						<p class="text-primary-foreground/80 font-medium">
-							Dokumen Beasiswa Terproses
+							Harga Transparan per Halaman
 						</p>
 					</div>
 					<div class="py-4 md:py-0">
-						<p class="text-4xl font-bold mb-2">50+</p>
+						<p class="text-3xl font-bold mb-2">100% Online</p>
 						<p class="text-primary-foreground/80 font-medium">
-							Universitas Global Tujuan
+							Tanpa WhatsApp, Tanpa Email
 						</p>
 					</div>
 					<div class="py-4 md:py-0">
-						<p class="text-4xl font-bold mb-2">100%</p>
+						<p class="text-3xl font-bold mb-2">Legal</p>
 						<p class="text-primary-foreground/80 font-medium">
-							Keamanan Data Terjamin
+							Stamp Penerjemah Tersumpah Resmi
 						</p>
 					</div>
 				</div>

@@ -2,11 +2,19 @@
     import {
         orderStore,
         totalPrice,
+        originalPrice,
         removeFile,
         updatePageCount,
         setUrgency,
         toggleHardCopy,
         setAddress,
+        promoCode,
+        promoDiscount,
+        promoError,
+        promoLoading,
+        promoApplied,
+        applyPromoCode,
+        clearPromo,
     } from "../stores/orderStore";
     import {
         Trash2,
@@ -24,6 +32,10 @@
         Siren,
         Plus,
         Minus,
+        Tag,
+        X,
+        Check,
+        Loader2,
     } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
     import { createClient } from "../lib/supabase";
@@ -39,6 +51,7 @@
     import { Switch } from "../lib/components/ui/switch";
     import { Button } from "../lib/components/ui/button";
     import { Label } from "../lib/components/ui/label";
+    import { Input } from "../lib/components/ui/input";
     import { addDays, format } from "date-fns";
     import { id } from "date-fns/locale";
 
@@ -58,6 +71,7 @@
     let isLoading = false;
     let isRestoring = true;
     let showLoginModal = false;
+    let promoInput = "";
 
     // Colors: Start (Grey: #9ca3af) -> Mid (Primary Green: #064E3B) -> Urgent (Orange: #f59e0b)
     const START_COLOR = [156, 163, 175]; // #9ca3af
@@ -476,6 +490,66 @@
             </div>
         </div>
 
+        <!-- Promo Code -->
+        <div class="rounded-xl border bg-card p-4 sm:p-6 shadow-sm">
+            <div class="flex items-center gap-2 mb-3">
+                <Tag class="h-4 w-4 text-primary" />
+                <Label class="text-sm font-semibold">Kode Promo</Label>
+            </div>
+
+            {#if $promoApplied}
+                <div
+                    class="flex items-center justify-between gap-2 rounded-lg border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30 p-3"
+                    transition:slide
+                >
+                    <div class="flex items-center gap-2">
+                        <Check class="h-4 w-4 text-green-600" />
+                        <span
+                            class="text-sm font-medium text-green-700 dark:text-green-400"
+                        >
+                            {$promoCode} — Diskon {$promoDiscount}%
+                        </span>
+                    </div>
+                    <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        class="h-7 w-7 text-muted-foreground hover:text-destructive"
+                        onclick={clearPromo}
+                    >
+                        <X class="h-3.5 w-3.5" />
+                    </Button>
+                </div>
+            {:else}
+                <div class="flex gap-2">
+                    <Input
+                        placeholder="Masukkan kode promo"
+                        class="flex-1 uppercase"
+                        bind:value={promoInput}
+                        onkeydown={(e: KeyboardEvent) => {
+                            if (e.key === "Enter") applyPromoCode(promoInput);
+                        }}
+                    />
+                    <Button
+                        variant="outline"
+                        onclick={() => applyPromoCode(promoInput)}
+                        disabled={$promoLoading || !promoInput.trim()}
+                        class="shrink-0"
+                    >
+                        {#if $promoLoading}
+                            <Loader2 class="h-4 w-4 animate-spin" />
+                        {:else}
+                            Gunakan
+                        {/if}
+                    </Button>
+                </div>
+                {#if $promoError}
+                    <p class="text-xs text-destructive mt-2" transition:fade>
+                        {$promoError}
+                    </p>
+                {/if}
+            {/if}
+        </div>
+
         <!-- Sticky Footer for Mobile -->
         <div
             class="fixed bottom-0 left-0 right-0 p-4 bg-background border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] sm:static sm:bg-transparent sm:border-0 sm:shadow-none sm:p-0 z-50"
@@ -487,9 +561,24 @@
                     <p class="text-xs sm:text-sm text-muted-foreground">
                         Total Estimasi
                     </p>
-                    <p class="text-xl sm:text-3xl font-bold text-primary">
-                        {formatPrice($totalPrice)}
-                    </p>
+                    {#if $promoApplied}
+                        <div class="flex items-baseline gap-2">
+                            <p
+                                class="text-xl sm:text-3xl font-bold text-primary"
+                            >
+                                {formatPrice($totalPrice)}
+                            </p>
+                            <p
+                                class="text-sm text-muted-foreground line-through"
+                            >
+                                {formatPrice($originalPrice)}
+                            </p>
+                        </div>
+                    {:else}
+                        <p class="text-xl sm:text-3xl font-bold text-primary">
+                            {formatPrice($totalPrice)}
+                        </p>
+                    {/if}
                 </div>
                 <Button
                     size="lg"

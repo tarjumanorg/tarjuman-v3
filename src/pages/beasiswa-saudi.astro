@@ -1,0 +1,619 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { createClient } from "../lib/supabase";
+import {
+    Calendar,
+    AlertTriangle,
+    CheckCircle2,
+    HelpCircle,
+    FileText,
+    Calculator,
+    ArrowRight,
+} from "lucide-svelte";
+
+const supabase = createClient(Astro);
+
+// Fetch requirements
+const { data: requirements } = await supabase
+    .from("scholarship_requirements")
+    .select("*")
+    .eq("active", true)
+    .order("sort_order", { ascending: true });
+
+const currentYear = requirements?.[0]?.year ?? new Date().getFullYear();
+const requiredDocs = requirements?.filter((r) => r.is_required) ?? [];
+const optionalDocs = requirements?.filter((r) => !r.is_required) ?? [];
+
+// Estimate total pages for the widget
+const totalPagesMin = requiredDocs.reduce((sum, r) => sum + r.typical_pages, 0);
+const totalPagesMax =
+    totalPagesMin + optionalDocs.reduce((sum, r) => sum + r.typical_pages, 0);
+
+const BASE_PRICE = 75000;
+const estimatedMin = totalPagesMin * BASE_PRICE;
+const estimatedMax = totalPagesMax * BASE_PRICE;
+
+function formatPrice(price: number) {
+    return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0,
+    }).format(price);
+}
+
+// Structured Data (JSON-LD)
+const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: `Panduan Lengkap & Checklist Dokumen Beasiswa Arab Saudi ${currentYear}`,
+    image: "https://tarjuman.id/og-saudi.jpg", // Placeholder
+    author: {
+        "@type": "Organization",
+        name: "Tarjuman - Jasa Penerjemah Tersumpah",
+        url: "https://tarjuman.id",
+    },
+    publisher: {
+        "@type": "Organization",
+        name: "Tarjuman",
+        logo: {
+            "@type": "ImageObject",
+            url: "https://tarjuman.id/logo.png",
+        },
+    },
+    datePublished: "2026-02-16",
+    dateModified: new Date().toISOString().split("T")[0],
+    description:
+        "Panduan lengkap persiapan dokumen untuk pendaftaran beasiswa Study in Saudi 2026. Simak syarat wajib, timeline pendaftaran, dan estimasi biaya penerjemah tersumpah.",
+};
+
+const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+        {
+            "@type": "Question",
+            name: "Apakah dokumen harus diterjemahkan tersumpah?",
+            acceptedAnswer: {
+                "@type": "Answer",
+                text: "Ya, mayoritas universitas di Arab Saudi mewajibkan terjemahan resmi (sworn translation) untuk ijazah dan transkrip nilai agar diakui validitasnya.",
+            },
+        },
+        {
+            "@type": "Question",
+            name: "Berapa lama proses penerjemahan dokumen?",
+            acceptedAnswer: {
+                "@type": "Answer",
+                text: "Di Tarjuman, proses standar memakan waktu 3-7 hari kerja tergantung jumlah halaman. Tersedia layanan kilat jika dibutuhkan.",
+            },
+        },
+        {
+            "@type": "Question",
+            name: "Apakah perlu legalisir Kemenlu/Kemenkumham?",
+            acceptedAnswer: {
+                "@type": "Answer",
+                text: "Untuk tahap pendaftaran awal (upload portal), biasanya cukup terjemahan tersumpah. Legalisir Kemenlu/Kemenkumham (Apostille) biasanya diminta setelah dinyatakan diterima (LoA) untuk pengurusan visa.",
+            },
+        },
+    ],
+};
+---
+
+<Layout
+    title={`Syarat & Checklist Beasiswa Arab Saudi ${currentYear} - Panduan Lengkap`}
+    description={`Persiapkan dokumen beasiswa Study in Saudi ${currentYear} dengan benar. Cek syarat wajib, hindari kesalahan fatal, dan hitung biaya terjemahan tersumpah di sini.`}
+>
+    <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+    <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+
+    <div class="bg-background min-h-screen pb-12">
+        <!-- Header / Breadcrumb Area -->
+        <div class="bg-muted/30 border-b">
+            <div class="container mx-auto px-4 py-8 sm:py-12">
+                <div
+                    class="flex items-center gap-2 text-sm text-muted-foreground mb-4"
+                >
+                    <a href="/" class="hover:text-primary transition-colors"
+                        >Home</a
+                    >
+                    <span>/</span>
+                    <span class="text-foreground font-medium"
+                        >Panduan Beasiswa</span
+                    >
+                </div>
+                <h1
+                    class="text-3xl sm:text-4xl md:text-5xl font-bold font-serif text-foreground tracking-tight mb-4"
+                >
+                    Panduan Lengkap Pemberkasan <br />
+                    <span class="text-primary"
+                        >Beasiswa Arab Saudi {currentYear}</span
+                    >
+                </h1>
+                <p class="text-base sm:text-lg text-muted-foreground max-w-2xl">
+                    Jangan biarkan kesalahan administrasi menghambat mimpimu
+                    kuliah di Madinah atau Makkah. Pelajari syarat dokumen yang
+                    valid dan terverifikasi.
+                </p>
+                <div
+                    class="flex items-center gap-4 mt-6 text-sm text-muted-foreground"
+                >
+                    <div class="flex items-center gap-1.5">
+                        <Calendar class="w-4 h-4" />
+                        <span>Updated: Feb 2026</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <CheckCircle2 class="w-4 h-4 text-green-600" />
+                        <span>Verified by Sworn Translator</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div
+            class="container mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 relative"
+        >
+            <!-- Main Content Area -->
+            <article class="lg:col-span-8 space-y-12">
+                <!-- Introduction -->
+                <div class="prose prose-slate dark:prose-invert max-w-none">
+                    <p class="lead text-lg">
+                        Mendaftar beasiswa melalui portal <strong
+                            >studyinsaudi.moe.gov.sa</strong
+                        > adalah pintu gerbang menuju pendidikan gratis di universitas-universitas
+                        terbaik Kerajaan. Namun, ribuan pelamar gagal setiap tahun
+                        bukan karena kurang pintar, tapi karena <strong
+                            >masalah administrasi dokumen</strong
+                        >.
+                    </p>
+                    <p>
+                        Panduan ini disusun khusus untuk membantumu
+                        mempersiapkan dokumen terjemahan yang akurat, legal, dan
+                        sesuai standar universitas di Arab Saudi.
+                    </p>
+                </div>
+
+                <!-- Timeline Section -->
+                <section>
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                        <Calendar class="w-6 h-6 text-primary" />
+                        Timeline Pendaftaran {currentYear} (Estimasi)
+                    </h2>
+                    <div
+                        class="relative border-l-2 border-primary/20 ml-3 space-y-8 pb-4"
+                    >
+                        <div class="relative pl-8">
+                            <span
+                                class="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-primary ring-4 ring-background"
+                            ></span>
+                            <h3 class="font-bold text-lg">Februari - April</h3>
+                            <p class="text-muted-foreground mb-2">
+                                Periode Persiapan Dokumen
+                            </p>
+                            <div class="bg-card border rounded-lg p-4 text-sm">
+                                Fokus urus Paspor, SKCK, dan Surat Sehat. Mulai
+                                cicil terjemahan Ijazah & Transkrip karena
+                                proses ini memakan waktu.
+                            </div>
+                        </div>
+                        <div class="relative pl-8">
+                            <span
+                                class="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-blue-500 ring-4 ring-background"
+                            ></span>
+                            <h3 class="font-bold text-lg">
+                                April - Mei (Golden Period)
+                            </h3>
+                            <p class="text-muted-foreground mb-2">
+                                Puncak Penerjemahan Tersumpah
+                            </p>
+                            <div class="bg-card border rounded-lg p-4 text-sm">
+                                Penerjemah tersumpah biasanya <strong
+                                    >overload</strong
+                                > di bulan ini. Pesan terjemahan sekarang untuk menghindari
+                                biaya layanan ekspres/kilat.
+                            </div>
+                        </div>
+                        <div class="relative pl-8">
+                            <span
+                                class="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-muted-foreground ring-4 ring-background"
+                            ></span>
+                            <h3 class="font-bold text-lg">Mei - Juni</h3>
+                            <p class="text-muted-foreground mb-2">
+                                Portal Pendaftaran Dibuka
+                            </p>
+                            <div class="bg-card border rounded-lg p-4 text-sm">
+                                Upload dokumen ke portal Study in Saudi.
+                                Pastikan file hasil scan terjemahanmu jernih dan
+                                di bawah 2MB.
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Checklist Detail -->
+                <section>
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                        <FileText class="w-6 h-6 text-primary" />
+                        Checklist Dokumen Wajib
+                    </h2>
+                    <div class="grid gap-4">
+                        {
+                            requiredDocs.map((doc, i) => (
+                                <div class="flex gap-4 p-4 sm:p-5 rounded-xl border bg-card hover:border-primary/50 transition-colors">
+                                    <div class="font-bold text-2xl text-primary/20 select-none">
+                                        {(i + 1).toString().padStart(2, "0")}
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex flex-wrap items-baseline justify-between gap-2 mb-1">
+                                            <h3 class="font-bold text-lg text-foreground">
+                                                {doc.document_name}
+                                            </h3>
+                                            <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                                                Est. {doc.typical_pages} Halaman
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-foreground/80 mb-2">
+                                            Nama Arab:{" "}
+                                            <span class="font-arabic" lang="ar">
+                                                {doc.document_name_ar}
+                                            </span>
+                                        </p>
+                                        {doc.notes && (
+                                            <div class="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg border border-transparent hover:border-border transition-colors">
+                                                <span class="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 block mb-1">
+                                                    Catatan Penting:
+                                                </span>
+                                                {doc.notes}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))
+                        }
+                    </div>
+
+                    {
+                        optionalDocs.length > 0 && (
+                            <div class="mt-8">
+                                <h3 class="text-lg font-bold mb-4 text-muted-foreground">
+                                    Dokumen Pendukung (Opsional)
+                                </h3>
+                                <div class="grid gap-4 opacity-80 hover:opacity-100 transition-opacity">
+                                    {optionalDocs.map((doc) => (
+                                        <div class="flex gap-4 p-4 rounded-xl border border-dashed bg-card/50">
+                                            <div class="flex-1">
+                                                <h3 class="font-semibold text-foreground">
+                                                    {doc.document_name}
+                                                </h3>
+                                                <p class="text-sm text-muted-foreground mt-1">
+                                                    {doc.notes}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )
+                    }
+                </section>
+
+                <!-- Common Mistakes -->
+                <section
+                    class="bg-red-50 dark:bg-red-950/20 rounded-2xl p-6 sm:p-8 border border-red-100 dark:border-red-900/50"
+                >
+                    <h2
+                        class="text-xl sm:text-2xl font-bold mb-6 flex items-center gap-2 text-red-700 dark:text-red-400"
+                    >
+                        <AlertTriangle class="w-6 h-6" />
+                        5 Kesalahan Fatal Pemberkasan
+                    </h2>
+                    <ul class="space-y-4">
+                        <li class="flex gap-3">
+                            <span class="font-bold text-red-500">1.</span>
+                            <span class="text-foreground/90"
+                                ><strong>Salah Penerjemah:</strong> Menggunakan penerjemah
+                                biasa (non-tersumpah). Cap penerjemah tersumpah adalah
+                                syarat mutlak legalitas.</span
+                            >
+                        </li>
+                        <li class="flex gap-3">
+                            <span class="font-bold text-red-500">2.</span>
+                            <span class="text-foreground/90"
+                                ><strong>Scan Buram:</strong> Hasil scan dokumen asli
+                                atau terjemahan tidak terbaca jelas saat di-zoom oleh
+                                panitia seleksi.</span
+                            >
+                        </li>
+                        <li class="flex gap-3">
+                            <span class="font-bold text-red-500">3.</span>
+                            <span class="text-foreground/90"
+                                ><strong>Nama Tidak Konsisten:</strong> Ejaan nama
+                                di Ijazah beda dengan di Paspor. (Solusi: Lampirkan
+                                surat keterangan beda nama).</span
+                            >
+                        </li>
+                        <li class="flex gap-3">
+                            <span class="font-bold text-red-500">4.</span>
+                            <span class="text-foreground/90"
+                                ><strong>SKCK Expired:</strong> Mengupload SKCK yang
+                                sudah lewat masa berlakunya saat seleksi berlangsung.</span
+                            >
+                        </li>
+                        <li class="flex gap-3">
+                            <span class="font-bold text-red-500">5.</span>
+                            <span class="text-foreground/90"
+                                ><strong>File Corrupt:</strong> Tidak mengecek ulang
+                                file PDF sebelum upload ke portal.</span
+                            >
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- FAQ (Accordion) -->
+                <section>
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                        <HelpCircle class="w-6 h-6 text-primary" />
+                        Frequently Asked Questions
+                    </h2>
+                    <div class="space-y-4">
+                        <details
+                            class="group rounded-lg border bg-card open:ring-1 open:ring-primary/20"
+                        >
+                            <summary
+                                class="flex cursor-pointer list-none items-center justify-between p-4 font-medium sm:p-6"
+                            >
+                                Apakah dokumen harus diterjemahkan tersumpah?
+                                <span
+                                    class="opacity-70 transition group-open:rotate-180"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        ><path d="m6 9 6 6 6-6"></path></svg
+                                    >
+                                </span>
+                            </summary>
+                            <div
+                                class="border-t px-4 pb-6 pt-2 sm:px-6 text-muted-foreground leading-relaxed"
+                            >
+                                Ya. Universitas di Arab Saudi mewajibkan dokumen
+                                akademik (Ijazah, Transkrip) dan legal (SKCK,
+                                Akta) diterjemahkan oleh <em
+                                    >Sworn Translator</em
+                                > (Penerjemah Tersumpah) resmi agar memiliki kekuatan
+                                hukum. Terjemahan biasa tanpa cap basah penerjemah
+                                tersumpah berisiko tinggi ditolak.
+                            </div>
+                        </details>
+
+                        <details
+                            class="group rounded-lg border bg-card open:ring-1 open:ring-primary/20"
+                        >
+                            <summary
+                                class="flex cursor-pointer list-none items-center justify-between p-4 font-medium sm:p-6"
+                            >
+                                Berapa lama proses terjemahan selesai?
+                                <span
+                                    class="opacity-70 transition group-open:rotate-180"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        ><path d="m6 9 6 6 6-6"></path></svg
+                                    >
+                                </span>
+                            </summary>
+                            <div
+                                class="border-t px-4 pb-6 pt-2 sm:px-6 text-muted-foreground leading-relaxed"
+                            >
+                                Di Tarjuman, kami menawarkan beberapa opsi
+                                kecepatan:
+                                <ul class="mt-2 list-disc pl-5 space-y-1">
+                                    <li>
+                                        <strong>Reguler (Recommended):</strong> 5-9
+                                        hari kerja (Paling Hemat).
+                                    </li>
+                                    <li>
+                                        <strong>Express:</strong> 2-3 hari kerja.
+                                    </li>
+                                    <li>
+                                        <strong>Urgent/Kilat:</strong> 24 jam (Jika
+                                        slot tersedia).
+                                    </li>
+                                </ul>
+                                Saran kami: Pesan jauh-jauh hari agar bisa ambil paket
+                                Reguler yang lebih hemat.
+                            </div>
+                        </details>
+
+                        <details
+                            class="group rounded-lg border bg-card open:ring-1 open:ring-primary/20"
+                        >
+                            <summary
+                                class="flex cursor-pointer list-none items-center justify-between p-4 font-medium sm:p-6"
+                            >
+                                Apakah perlu legalisir Kemenlu & Kemenkumham
+                                (Apostille)?
+                                <span
+                                    class="opacity-70 transition group-open:rotate-180"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        ><path d="m6 9 6 6 6-6"></path></svg
+                                    >
+                                </span>
+                            </summary>
+                            <div
+                                class="border-t px-4 pb-6 pt-2 sm:px-6 text-muted-foreground leading-relaxed"
+                            >
+                                Untuk <strong
+                                    >tahap pendaftaran (upload portal)</strong
+                                >, mayoritas universitas HANYA meminta scan asli
+                                + terjemahan tersumpah. Anda belum perlu
+                                Apostille/Legalisir saat masih tahap seleksi.<br
+                                /><br />
+                                Legalisir Kemenlu/Kemenkumham/Kedutaan biasanya baru
+                                diurus <strong>SETELAH</strong> Anda dinyatakan diterima
+                                (mendapat Isy'ar Qabul) untuk keperluan pengurusan
+                                Visa Pelajar.
+                            </div>
+                        </details>
+                    </div>
+                </section>
+
+                <div class="h-8"></div>
+            </article>
+
+            <!-- Sidebar / Widgets (Sticky) -->
+            <aside class="lg:col-span-4 space-y-6">
+                <!-- Sticky Wrapper -->
+                <div class="sticky top-8">
+                    <!-- Cost Calculator Widget -->
+                    <div
+                        class="rounded-xl border bg-card shadow-sm overflow-hidden"
+                    >
+                        <div
+                            class="bg-primary/5 p-4 border-b border-primary/10"
+                        >
+                            <h3
+                                class="font-bold flex items-center gap-2 text-primary"
+                            >
+                                <Calculator class="w-5 h-5" />
+                                Estimasi Biaya
+                            </h3>
+                        </div>
+                        <div class="p-6 space-y-6">
+                            <div class="space-y-4">
+                                <div
+                                    class="flex justify-between items-center text-sm"
+                                >
+                                    <span class="text-muted-foreground"
+                                        >Dokumen Wajib (~{totalPagesMin} hal)</span
+                                    >
+                                    <span class="font-medium"
+                                        >{formatPrice(estimatedMin)}</span
+                                    >
+                                </div>
+                                <div
+                                    class="flex justify-between items-center text-sm"
+                                >
+                                    <span class="text-muted-foreground"
+                                        >Opsional (~{
+                                            totalPagesMax - totalPagesMin
+                                        } hal)</span
+                                    >
+                                    <span class="font-medium"
+                                        >+{
+                                            formatPrice(
+                                                estimatedMax - estimatedMin,
+                                            )
+                                        }</span
+                                    >
+                                </div>
+                                <div
+                                    class="pt-4 border-t flex justify-between items-center"
+                                >
+                                    <span class="font-bold">Estimasi Total</span
+                                    >
+                                    <div class="text-right">
+                                        <span
+                                            class="block text-2xl font-bold text-primary"
+                                            >{formatPrice(estimatedMin)} - {
+                                                formatPrice(estimatedMax)
+                                            }</span
+                                        >
+                                        <span
+                                            class="text-[10px] text-muted-foreground uppercase tracking-wide"
+                                            >Tarif Reguler</span
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <a
+                                href="/"
+                                class="w-full flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-bold text-primary-foreground shadow-lg hover:bg-primary/90 hover:scale-[1.02] transition-all"
+                            >
+                                Mulai Upload Dokumen
+                                <ArrowRight class="w-4 h-4" />
+                            </a>
+
+                            <p
+                                class="text-xs text-center text-muted-foreground"
+                            >
+                                Diskon <strong>30%</strong> tersedia untuk pendaftar
+                                awal dengan kode <code
+                                    class="bg-muted px-1 py-0.5 rounded text-foreground font-mono"
+                                    >LAUNCH50</code
+                                >
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Trust Badge Widget -->
+                    <div class="rounded-xl border bg-card p-6 mt-6">
+                        <h3
+                            class="font-bold text-sm text-muted-foreground uppercase tracking-wider mb-4"
+                        >
+                            Kenapa Tarjuman?
+                        </h3>
+                        <ul class="space-y-3 text-sm">
+                            <li class="flex gap-2">
+                                <CheckCircle2
+                                    class="w-5 h-5 text-green-600 shrink-0"
+                                />
+                                <span>Penerjemah Tersumpah Resmi</span>
+                            </li>
+                            <li class="flex gap-2">
+                                <CheckCircle2
+                                    class="w-5 h-5 text-green-600 shrink-0"
+                                />
+                                <span>100% Online, Kirim File PDF</span>
+                            </li>
+                            <li class="flex gap-2">
+                                <CheckCircle2
+                                    class="w-5 h-5 text-green-600 shrink-0"
+                                />
+                                <span>Hasil Scan Jernih Siap Upload</span>
+                            </li>
+                            <li class="flex gap-2">
+                                <CheckCircle2
+                                    class="w-5 h-5 text-green-600 shrink-0"
+                                />
+                                <span>Hard Copy Bisa Dikirim (Opsional)</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+</Layout>
+
+<style>
+    /* Custom utility for arabic font if needed */
+    .font-arabic {
+        font-family: "Traditional Arabic", serif;
+        font-weight: bold;
+    }
+</style>
