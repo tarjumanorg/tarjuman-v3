@@ -24,12 +24,13 @@ const currentYear = requirements?.[0]?.year ?? new Date().getFullYear();
 const requiredDocs = requirements?.filter((r) => r.is_required) ?? [];
 const optionalDocs = requirements?.filter((r) => !r.is_required) ?? [];
 
+import { BASE_PRICE, formatPrice } from "../lib/pricing";
+
 // Estimate total pages for the widget
 const totalPagesMin = requiredDocs.reduce((sum, r) => sum + r.typical_pages, 0);
 const totalPagesMax =
     totalPagesMin + optionalDocs.reduce((sum, r) => sum + r.typical_pages, 0);
 
-const BASE_PRICE = 75000;
 const estimatedMin = totalPagesMin * BASE_PRICE;
 const estimatedMax = totalPagesMax * BASE_PRICE;
 
