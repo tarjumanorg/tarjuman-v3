@@ -55,50 +55,48 @@
     import { addDays, format } from "date-fns";
     import { id } from "date-fns/locale";
 
-    const SPEED_LEVELS = [
-        { level: 1, label: "Budget", icon: Wallet },
-        { level: 2, label: "Economy", icon: Coins },
-        { level: 3, label: "Regular", icon: Coffee },
-        { level: 4, label: "Standard", icon: Armchair },
-        { level: 5, label: "Rapid", icon: Bike },
-        { level: 6, label: "Fast", icon: Car },
-        { level: 7, label: "Express", icon: Plane },
-        { level: 8, label: "Ultra", icon: Rocket },
-        { level: 9, label: "Instant", icon: Zap },
-        { level: 10, label: "Urgent", icon: Siren },
-    ];
+    import { PRICING_TIERS, getTierByDays } from "../lib/pricing";
 
     let isLoading = false;
     let isRestoring = true;
     let showLoginModal = false;
     let promoInput = "";
 
-    // Colors: Start (Grey: #9ca3af) -> Mid (Primary Green: #064E3B) -> Urgent (Orange: #f59e0b)
-    const START_COLOR = [156, 163, 175]; // #9ca3af
-    const PRIMARY_GREEN = [6, 78, 59]; // #064E3B
-    const URGENT_ORANGE = [245, 158, 11]; // #f59e0b (amber-500)
+    // Map urgency (days) to slider index (0 = Reguler/Slowest, 3 = Kilat/Fastest)
+    // We reverse the array for display if we want Left=Cheap/Slow, Right=Expensive/Fast
+    // PRICING_TIERS is [Reguler(9), Sedang(5), Ekspres(2), Kilat(1)]
+    // Index 0: Reguler (9 days)
+    // Index 1: Sedang (5 days)
+    // Index 2: Ekspres (2 days)
+    // Index 3: Kilat (1 day)
 
-    function interpolateColor(start: number[], end: number[], factor: number) {
-        const result = start.map((startVal, i) => {
-            const endVal = end[i];
-            return Math.round(startVal + (endVal - startVal) * factor);
-        });
-        return `rgb(${result.join(",")})`;
+    $: activeTierIndex = PRICING_TIERS.findIndex(
+        (t) => t.days === $orderStore.urgencyDays,
+    );
+    $: activeTier = PRICING_TIERS[activeTierIndex] || PRICING_TIERS[0];
+
+    // Icon Mapping
+    const TIER_ICONS = {
+        reguler: Wallet,
+        sedang: Car,
+        ekspres: Plane,
+        kilat: Siren,
+    };
+
+    // Helper to get color based on index
+    function getTierColor(index: number) {
+        // Budget -> Green, Mid -> Teal, Express -> Blue, Urgent -> Orange/Red
+        const colors = [
+            "rgb(22, 163, 74)", // Green-600 (Reguler)
+            "rgb(13, 148, 136)", // Teal-600 (Sedang)
+            "rgb(37, 99, 235)", // Blue-600 (Ekspres)
+            "rgb(234, 88, 12)", // Orange-600 (Kilat)
+        ];
+        return colors[index] || colors[0];
     }
 
-    $: sliderColor =
-        $orderStore.urgencyDays === 0
-            ? `rgb(${URGENT_ORANGE.join(",")})`
-            : interpolateColor(
-                  START_COLOR,
-                  PRIMARY_GREEN,
-                  (9 - $orderStore.urgencyDays) / 8,
-              );
-
-    $: activeSpeed =
-        SPEED_LEVELS.find((s) => s.level === 10 - $orderStore.urgencyDays) ||
-        SPEED_LEVELS[0];
-    $: deliveryDate = addDays(new Date(), $orderStore.urgencyDays);
+    $: sliderColor = getTierColor(activeTierIndex);
+    $: deliveryDate = addDays(new Date(), activeTier.days);
 
     onMount(async () => {
         // Try to restore state on load
@@ -380,13 +378,13 @@
                         <div class="flex items-center gap-3 text-primary">
                             <div class="p-2 bg-primary/10 rounded-lg">
                                 <svelte:component
-                                    this={activeSpeed.icon}
+                                    this={TIER_ICONS[activeTier.id]}
                                     class="h-6 w-6 sm:h-8 sm:w-8"
                                 />
                             </div>
                             <span
                                 class="text-xl sm:text-2xl font-bold leading-none"
-                                >{activeSpeed.label}</span
+                                >{activeTier.label}</span
                             >
                         </div>
                     </div>
@@ -409,8 +407,8 @@
                             <p
                                 class="text-xs sm:text-sm font-medium text-muted-foreground"
                             >
-                                {$orderStore.urgencyDays === 0
-                                    ? "Hari Ini"
+                                {$orderStore.urgencyDays === 1
+                                    ? "24 Jam"
                                     : `${$orderStore.urgencyDays} Hari`}
                             </p>
                         </div>
@@ -421,19 +419,22 @@
                     <Wallet class="h-4 w-4 text-muted-foreground shrink-0" />
                     <div class="flex-1">
                         <Slider
-                            value={[10 - $orderStore.urgencyDays]}
+                            value={[activeTierIndex]}
                             onValueChange={(v: number[]) => {
-                                if (v && v.length > 0) setUrgency(10 - v[0]);
+                                if (v && v.length > 0) {
+                                    const tier = PRICING_TIERS[v[0]];
+                                    if (tier) setUrgency(tier.days);
+                                }
                             }}
-                            min={1}
-                            max={10}
+                            min={0}
+                            max={3}
                             step={1}
                             class="cursor-pointer"
                         />
                     </div>
                     <Zap
                         class="h-4 w-4 shrink-0 transition-all duration-300 {$orderStore.urgencyDays ===
-                        0
+                        1
                             ? 'text-yellow-400 scale-125 [filter:drop-shadow(0_0_8px_#facc15)]'
                             : 'text-muted-foreground opacity-50'}"
                     />

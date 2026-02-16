@@ -23,11 +23,7 @@ export const promoError = atom('');
 export const promoLoading = atom(false);
 export const promoApplied = atom(false);
 
-// Base price configuration
-const BASE_PRICE = 75000; // Price for 9 days (slowest)
-const URGENCY_SURCHARGE_PER_DAY = 30000; // Cost per day reduced
-
-const HARD_COPY_FEE = 20000;
+import { PRICING_TIERS, getTierByDays, HARD_COPY_FEE } from '../lib/pricing';
 
 export const orderStore = map<OrderState>({
     files: [],
@@ -36,15 +32,13 @@ export const orderStore = map<OrderState>({
     hardCopyAddress: '',
 });
 
-// Computed price BEFORE discount
+// Computed total price (before discount)
 export const originalPrice = computed(orderStore, ({ files, urgencyDays, hardCopy }) => {
     const totalPages = files.reduce((acc, item) => acc + item.pageCount, 0);
 
-    // Calculate price per page based on urgency
-    // Days: 9 (Base) -> 8 (+30k) -> ... -> 1 (+240k)
-    // Formula: Base + (9 - days) * Surcharge
-    const daysReduced = 9 - urgencyDays;
-    const pricePerPage = BASE_PRICE + (daysReduced * URGENCY_SURCHARGE_PER_DAY);
+    // Calculate price per page based on tier
+    const tier = getTierByDays(urgencyDays);
+    const pricePerPage = tier.price;
 
     let price = totalPages * pricePerPage;
 
