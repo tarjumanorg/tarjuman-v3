@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
+import { defineConfig, envField } from 'astro/config';
 
 import svelte from '@astrojs/svelte';
 import tailwindcss from '@tailwindcss/vite';
@@ -17,5 +17,14 @@ export default defineConfig({
 
   adapter: cloudflare({
     imageService: 'compile',
-  })
+  }),
+
+  env: {
+    schema: {
+      DUITKU_MERCHANT_CODE: envField.string({ context: "server", access: "secret" }),
+      DUITKU_API_KEY: envField.string({ context: "server", access: "secret" }),
+      DUITKU_BASE_URL: envField.string({ context: "server", access: "secret", default: "https://sandbox.duitku.com" }),
+      SITE_URL: envField.string({ context: "server", access: "secret", default: "https://tarjuman.org" }),
+    }
+  }
 });
