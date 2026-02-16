@@ -42,8 +42,18 @@ export const GET: APIRoute = async ({ request, url, cookies, redirect }) => {
             headers: { "Content-Type": "application/json" },
         });
     } catch (err: any) {
-        console.error("[payment-methods] ERROR:", err.message);
-        return new Response(JSON.stringify({ error: err.message || "Failed to fetch payment methods" }), {
+        console.error("[payment-methods] FATAL ERROR:", {
+            message: err.message,
+            stack: err.stack,
+            cause: err.cause,
+            headers: Object.fromEntries(request.headers),
+        });
+
+        // Return detailed error for debugging (remove in prod if needed, but critical now)
+        return new Response(JSON.stringify({
+            error: err.message || "Failed to fetch payment methods",
+            stack: err.stack,
+        }), {
             status: 500,
             headers: { "Content-Type": "application/json" },
         });

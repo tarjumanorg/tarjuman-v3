@@ -10,7 +10,7 @@
  */
 
 import { getSecret } from 'astro:env/server';
-import { createHash } from 'node:crypto';
+import { md5 } from './md5';
 
 // ─── Config ────────────────────────────────────────────────────
 function getConfig() {
@@ -27,10 +27,8 @@ function getConfig() {
     return { merchantCode, apiKey, baseUrl, siteUrl };
 }
 
-// ─── MD5 (via node:crypto — works in Node.js dev & Cloudflare Workers with nodejs_compat) ──
-function md5(input: string): string {
-    return createHash('md5').update(input).digest('hex');
-}
+// ─── MD5 (via pure JS — robust across all environments) ────────
+// Function is imported from ./md5.ts
 
 // ─── SHA256 (Web Crypto — available on Cloudflare Workers) ──────
 async function sha256(input: string): Promise<string> {
