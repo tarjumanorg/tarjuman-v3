@@ -9,21 +9,22 @@
  * 3. Callback Verification: MD5(merchantCode + amount + merchantOrderId + apiKey)
  */
 
-import { DUITKU_MERCHANT_CODE, DUITKU_API_KEY, DUITKU_BASE_URL, SITE_URL } from 'astro:env/server';
+import { getSecret } from 'astro:env/server';
 import { createHash } from 'node:crypto';
 
 // ─── Config ────────────────────────────────────────────────────
 function getConfig() {
-    if (!DUITKU_MERCHANT_CODE || !DUITKU_API_KEY) {
-        throw new Error('DUITKU_MERCHANT_CODE and DUITKU_API_KEY must be set');
+    const merchantCode = getSecret('DUITKU_MERCHANT_CODE');
+    const apiKey = getSecret('DUITKU_API_KEY');
+    const baseUrl = getSecret('DUITKU_BASE_URL') || 'https://sandbox.duitku.com';
+    const siteUrl = getSecret('SITE_URL') || 'https://tarjuman.org';
+
+    if (!merchantCode || !apiKey) {
+        throw new Error('DUITKU_MERCHANT_CODE and DUITKU_API_KEY must be set. ' +
+            `merchantCode: ${merchantCode ? 'SET' : 'MISSING'}, apiKey: ${apiKey ? 'SET' : 'MISSING'}`);
     }
 
-    return {
-        merchantCode: DUITKU_MERCHANT_CODE,
-        apiKey: DUITKU_API_KEY,
-        baseUrl: DUITKU_BASE_URL,
-        siteUrl: SITE_URL,
-    };
+    return { merchantCode, apiKey, baseUrl, siteUrl };
 }
 
 // ─── MD5 (via node:crypto — works in Node.js dev & Cloudflare Workers with nodejs_compat) ──
