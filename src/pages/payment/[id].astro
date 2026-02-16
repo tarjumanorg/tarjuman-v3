@@ -39,9 +39,6 @@ if (order.payment_status === "paid") {
     return Astro.redirect(`/payment/success/${id}`);
 }
 
-// If we already have a Duitku payment URL, we can show it
-const existingPaymentUrl = order.duitku_payment_url || null;
-
 function formatPrice(price: number) {
     return new Intl.NumberFormat("id-ID", {
         style: "currency",
@@ -214,7 +211,7 @@ const paymentAmount = Math.round(order.final_price || 0);
     </div>
 </Layout>
 
-<script define:vars={{ orderId: id, paymentAmount, existingPaymentUrl }}>
+<script define:vars={{ orderId: id, paymentAmount }}>
     const methodsLoading = document.getElementById("methods-loading");
     const methodsError = document.getElementById("methods-error");
     const methodsGrid = document.getElementById("methods-grid");
@@ -222,11 +219,6 @@ const paymentAmount = Math.round(order.final_price || 0);
     const retryBtn = document.getElementById("retry-btn");
 
     let selectedMethod = null;
-
-    // If we already have a payment URL, redirect directly
-    if (existingPaymentUrl) {
-        window.location.href = existingPaymentUrl;
-    }
 
     async function loadPaymentMethods() {
         methodsLoading.classList.remove("hidden");

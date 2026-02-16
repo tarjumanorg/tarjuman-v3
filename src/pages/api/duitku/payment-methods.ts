@@ -36,13 +36,19 @@ export const GET: APIRoute = async ({ request, url, cookies, redirect }) => {
 
     // 3. Fetch payment methods from Duitku
     try {
+        console.log('[payment-methods] Fetching methods for amount:', amount);
+        console.log('[payment-methods] DUITKU_MERCHANT_CODE:', import.meta.env.DUITKU_MERCHANT_CODE ? 'SET' : 'NOT SET');
+        console.log('[payment-methods] DUITKU_API_KEY:', import.meta.env.DUITKU_API_KEY ? 'SET' : 'NOT SET');
+        console.log('[payment-methods] DUITKU_BASE_URL:', import.meta.env.DUITKU_BASE_URL || 'NOT SET');
+
         const methods = await getPaymentMethods(amount);
         return new Response(JSON.stringify({ methods }), {
             status: 200,
             headers: { "Content-Type": "application/json" },
         });
     } catch (err: any) {
-        console.error("Duitku getPaymentMethods error:", err);
+        console.error("[payment-methods] ERROR:", err.message);
+        console.error("[payment-methods] Stack:", err.stack);
         return new Response(JSON.stringify({ error: err.message || "Failed to fetch payment methods" }), {
             status: 500,
             headers: { "Content-Type": "application/json" },
