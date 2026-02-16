@@ -230,7 +230,10 @@ const paymentAmount = Math.round(order.final_price || 0);
             const res = await fetch(
                 `/api/duitku/payment-methods?amount=${paymentAmount}`,
             );
-            if (!res.ok) throw new Error("API error");
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || `API error (${res.status})`);
+            }
 
             const data = await res.json();
             const methods = data.methods || [];

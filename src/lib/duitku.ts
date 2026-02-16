@@ -14,10 +14,10 @@ import { createHash } from 'node:crypto';
 
 // ─── Config ────────────────────────────────────────────────────
 function getConfig() {
-    const merchantCode = getSecret('DUITKU_MERCHANT_CODE');
-    const apiKey = getSecret('DUITKU_API_KEY');
-    const baseUrl = getSecret('DUITKU_BASE_URL') || 'https://sandbox.duitku.com';
-    const siteUrl = getSecret('SITE_URL') || 'https://tarjuman.org';
+    const merchantCode = getSecret('DUITKU_MERCHANT_CODE') || import.meta.env.DUITKU_MERCHANT_CODE || (process.env as any)?.DUITKU_MERCHANT_CODE;
+    const apiKey = getSecret('DUITKU_API_KEY') || import.meta.env.DUITKU_API_KEY || (process.env as any)?.DUITKU_API_KEY;
+    const baseUrl = getSecret('DUITKU_BASE_URL') || import.meta.env.DUITKU_BASE_URL || (process.env as any)?.DUITKU_BASE_URL || 'https://sandbox.duitku.com';
+    const siteUrl = getSecret('SITE_URL') || import.meta.env.SITE_URL || (process.env as any)?.SITE_URL || 'https://tarjuman.org';
 
     if (!merchantCode || !apiKey) {
         throw new Error('DUITKU_MERCHANT_CODE and DUITKU_API_KEY must be set. ' +
