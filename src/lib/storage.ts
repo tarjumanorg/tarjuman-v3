@@ -1,8 +1,13 @@
-import localforage from 'localforage';
-import { get } from 'svelte/store';
-import { orderStore, type FileItem } from '../stores/orderStore';
+import localforage from "localforage";
+import {
+    orderStore,
+    promoCode,
+    promoDiscount,
+    promoApplied,
+    type FileItem,
+} from "../stores/orderStore";
 
-const STORAGE_KEY = 'tarjuman_order_state';
+const STORAGE_KEY = "tarjuman_order_state";
 
 interface PersistedState {
     files: FileItem[];
@@ -10,31 +15,38 @@ interface PersistedState {
     hardCopy: boolean;
     hardCopyAddress: string;
     timestamp: number;
+    promoCode?: string;
+    promoDiscount?: number;
+    promoApplied?: boolean;
 }
 
 export const storage = localforage.createInstance({
-    name: 'tarjuman_db',
-    storeName: 'order_state'
+    name: "tarjuman_db",
+    storeName: "order_state",
 });
 
 export async function saveOrderState() {
-    const currentState = get(orderStore);
+    const currentState = orderStore.get();
     const stateToSave: PersistedState = {
         files: currentState.files, // localforage handles File/Blob automatically
         urgencyDays: currentState.urgencyDays,
         hardCopy: currentState.hardCopy,
         hardCopyAddress: currentState.hardCopyAddress,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        promoCode: promoCode.get(),
+        promoDiscount: promoDiscount.get(),
+        promoApplied: promoApplied.get(),
     };
     await storage.setItem(STORAGE_KEY, stateToSave);
 }
 
 export async function restoreOrderState() {
-    const savedState = await storage.getItem<PersistedState>(STORAGE_KEY);
+    const savedState = (await storage.getItem(STORAGE_KEY)) as PersistedState;
 
     if (savedState) {
         // Optional: Check if state is too old (e.g., > 24 hours)
-        const isExpired = Date.now() - savedState.timestamp > 24 * 60 * 60 * 1000;
+        const isExpired =
+            Date.now() - savedState.timestamp > 24 * 60 * 60 * 1000;
         if (isExpired) {
             await clearOrderState();
             return false;
@@ -44,9 +56,15 @@ export async function restoreOrderState() {
             files: savedState.files,
             urgencyDays: savedState.urgencyDays,
             hardCopy: savedState.hardCopy,
-            hardCopyAddress: savedState.hardCopyAddress
-        } as any); // nanostores .set() takes the whole object, but here we are using .setKey individually or .set() for whole store
-        // Wait, orderStore is a map. .set() sets the whole object.
+            hardCopyAddress: savedState.hardCopyAddress,
+        });
+
+        if (savedState.promoApplied && savedState.promoCode) {
+            promoCode.set(savedState.promoCode);
+            promoDiscount.set(savedState.promoDiscount || 0);
+            promoApplied.set(true);
+        }
+
         return true;
     }
     return false;
@@ -54,4 +72,7 @@ export async function restoreOrderState() {
 
 export async function clearOrderState() {
     await storage.removeItem(STORAGE_KEY);
+    promoCode.set("");
+    promoDiscount.set(0);
+    promoApplied.set(false);
 }

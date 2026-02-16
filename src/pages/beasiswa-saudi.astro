@@ -1,0 +1,298 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { createClient } from "../lib/supabase";
+
+const supabase = createClient(Astro);
+
+// Fetch active requirements for the current year
+const { data: requirements } = await supabase
+    .from("scholarship_requirements")
+    .select("*")
+    .eq("active", true)
+    .order("sort_order", { ascending: true });
+
+const currentYear = requirements?.[0]?.year ?? new Date().getFullYear();
+
+const requiredDocs = requirements?.filter((r) => r.is_required) ?? [];
+const optionalDocs = requirements?.filter((r) => !r.is_required) ?? [];
+
+// Estimate total pages
+const totalPagesMin = requiredDocs.reduce((sum, r) => sum + r.typical_pages, 0);
+const totalPagesMax =
+    totalPagesMin + optionalDocs.reduce((sum, r) => sum + r.typical_pages, 0);
+
+const BASE_PRICE = 75000;
+const estimatedMin = totalPagesMin * BASE_PRICE;
+const estimatedMax = totalPagesMax * BASE_PRICE;
+
+function formatPrice(price: number) {
+    return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0,
+    }).format(price);
+}
+---
+
+<Layout title="Beasiswa Study in Saudi — Tarjuman">
+    <main class="min-h-screen bg-background">
+        <!-- Hero -->
+        <section class="relative overflow-hidden pt-8 pb-16 sm:pt-12 sm:pb-24">
+            <div
+                class="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"
+            >
+            </div>
+
+            <div class="container relative z-10 mx-auto px-4 text-center">
+                <div
+                    class="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs sm:text-sm font-medium text-primary mb-6"
+                >
+                    <span class="flex h-2 w-2 rounded-full bg-primary mr-2"
+                    ></span>
+                    Persyaratan Terjemahan {currentYear}
+                </div>
+
+                <h1
+                    class="mx-auto max-w-4xl font-serif text-3xl font-bold tracking-tight text-foreground sm:text-5xl mb-4"
+                >
+                    Checklist Terjemahan<br />
+                    <span class="text-primary">Beasiswa Study in Saudi</span>
+                </h1>
+
+                <p
+                    class="mx-auto max-w-2xl text-sm sm:text-lg text-muted-foreground mb-8"
+                >
+                    Dokumen yang perlu kamu terjemahkan ke Bahasa Arab untuk
+                    mendaftar beasiswa melalui <strong class="text-foreground"
+                        >studyinsaudi.moe.gov.sa</strong
+                    >.
+                </p>
+            </div>
+        </section>
+
+        <!-- Document Checklist -->
+        <section class="border-y bg-background py-12 sm:py-16">
+            <div class="container mx-auto px-4 max-w-3xl">
+                <!-- Required Documents -->
+                <div class="mb-12">
+                    <h2
+                        class="text-xl font-bold text-foreground mb-6 flex items-center gap-2"
+                    >
+                        <span
+                            class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-red-600 text-xs font-bold"
+                            >!</span
+                        >
+                        Dokumen Wajib
+                    </h2>
+
+                    <div class="space-y-3">
+                        {
+                            requiredDocs.map((doc) => (
+                                <div class="flex items-start gap-4 p-4 rounded-xl border bg-card hover:shadow-sm transition-shadow">
+                                    <div class="flex-shrink-0 mt-0.5">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="20"
+                                            height="20"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            class="text-primary"
+                                        >
+                                            <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                                            <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <h3 class="font-semibold text-foreground">
+                                                {doc.document_name}
+                                            </h3>
+                                            <span class="text-xs text-muted-foreground whitespace-nowrap">
+                                                ~{doc.typical_pages} hal
+                                            </span>
+                                        </div>
+                                        {doc.notes && (
+                                            <p class="text-sm text-muted-foreground mt-1">
+                                                {doc.notes}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            ))
+                        }
+                    </div>
+                </div>
+
+                <!-- Optional Documents -->
+                {
+                    optionalDocs.length > 0 && (
+                        <div class="mb-12">
+                            <h2 class="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-600 text-xs font-bold">
+                                    +
+                                </span>
+                                Dokumen Opsional (Nilai Tambah)
+                            </h2>
+
+                            <div class="space-y-3">
+                                {optionalDocs.map((doc) => (
+                                    <div class="flex items-start gap-4 p-4 rounded-xl border border-dashed bg-card/50 hover:shadow-sm transition-shadow">
+                                        <div class="flex-shrink-0 mt-0.5">
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="20"
+                                                height="20"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="2"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                class="text-muted-foreground"
+                                            >
+                                                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                                                <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center justify-between gap-2">
+                                                <h3 class="font-semibold text-foreground">
+                                                    {doc.document_name}
+                                                </h3>
+                                                <span class="text-xs text-muted-foreground whitespace-nowrap">
+                                                    ~{doc.typical_pages} hal
+                                                </span>
+                                            </div>
+                                            {doc.notes && (
+                                                <p class="text-sm text-muted-foreground mt-1">
+                                                    {doc.notes}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )
+                }
+
+                <!-- Price Estimator -->
+                <div class="rounded-2xl border bg-primary/5 p-6 sm:p-8">
+                    <h2
+                        class="text-xl font-bold text-foreground mb-4 text-center"
+                    >
+                        Estimasi Biaya Terjemahan
+                    </h2>
+
+                    <div class="text-center space-y-2 mb-6">
+                        <p class="text-sm text-muted-foreground">
+                            Dokumen wajib saja (~{totalPagesMin} halaman):
+                        </p>
+                        <p class="text-3xl font-bold text-primary">
+                            {formatPrice(estimatedMin)}
+                        </p>
+                        {
+                            optionalDocs.length > 0 && (
+                                <p class="text-sm text-muted-foreground">
+                                    Dengan dokumen opsional (~{totalPagesMax}{" "}
+                                    halaman):{" "}
+                                    <span class="font-semibold text-foreground">
+                                        {formatPrice(estimatedMax)}
+                                    </span>
+                                </p>
+                            )
+                        }
+                    </div>
+
+                    <p
+                        class="text-xs text-muted-foreground text-center mb-6 max-w-lg mx-auto"
+                    >
+                        * Estimasi berdasarkan {formatPrice(BASE_PRICE)}/halaman
+                        (kecepatan reguler 9 hari). Harga final dihitung setelah
+                        verifikasi jumlah halaman.
+                    </p>
+
+                    <div class="text-center">
+                        <a
+                            href="/"
+                            class="inline-flex items-center justify-center rounded-lg bg-primary px-8 py-3 text-sm font-medium text-primary-foreground shadow-lg hover:bg-primary/90 transition-all duration-200 hover:scale-[1.02]"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="mr-2"
+                                ><path
+                                    d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"
+                                ></path><path d="M12 12v9"></path><path
+                                    d="m16 16-4-4-4 4"></path></svg
+                            >
+                            Mulai Upload Dokumen
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Info Section -->
+        <section class="bg-muted/30 py-12 sm:py-16">
+            <div class="container mx-auto px-4 max-w-3xl">
+                <div
+                    class="space-y-6 text-sm sm:text-base text-muted-foreground"
+                >
+                    <div class="rounded-xl border bg-card p-6">
+                        <h3 class="font-bold text-foreground mb-2">
+                            📋 Tentang Study in Saudi
+                        </h3>
+                        <p>
+                            Pemerintah Arab Saudi menyediakan beasiswa penuh
+                            untuk mahasiswa internasional melalui portal <a
+                                href="https://studyinsaudi.moe.gov.sa"
+                                target="_blank"
+                                class="text-primary underline underline-offset-4"
+                                >studyinsaudi.moe.gov.sa</a
+                            >. Beasiswa mencakup biaya kuliah, tunjangan hidup,
+                            asrama, asuransi, dan tiket pesawat tahunan.
+                        </p>
+                    </div>
+
+                    <div class="rounded-xl border bg-card p-6">
+                        <h3 class="font-bold text-foreground mb-2">
+                            ⏰ Kapan Portl Dibuka?
+                        </h3>
+                        <p>
+                            Pendaftaran S1 biasanya dibuka sekitar <strong
+                                class="text-foreground">Mei–Juni</strong
+                            > setiap tahun. Beberapa universitas (PNU, KFUPM) punya
+                            jadwal berbeda. Persiapkan dokumen terjemahan <strong
+                                class="text-foreground">sebelum</strong
+                            > portal dibuka agar tidak terburu-buru.
+                        </p>
+                    </div>
+
+                    <div class="rounded-xl border bg-card p-6">
+                        <h3 class="font-bold text-foreground mb-2">
+                            🔐 Tentang Penerjemah Tersumpah
+                        </h3>
+                        <p>
+                            Semua terjemahan di Tarjuman dikerjakan oleh
+                            penerjemah resmi yang memiliki SK Kemenkumham. Hasil
+                            terjemahan dilengkapi cap basah dan tanda tangan
+                            asli yang diakui oleh kedutaan dan universitas.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</Layout>
