@@ -13,6 +13,11 @@ export default defineConfig({
     plugins: [tailwindcss()]
   },
 
+  // Allow external POST requests (e.g. from Duitku callback)
+  security: {
+    checkOrigin: false
+  },
+
   output: 'server',
 
   adapter: cloudflare({
