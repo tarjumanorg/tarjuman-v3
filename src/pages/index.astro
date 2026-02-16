@@ -7,9 +7,15 @@ import OrderConfig from "../components/OrderConfig.svelte";
 <Layout title="Tarjuman - Jasa Penerjemah Tersumpah Modern">
 	<main class="min-h-screen bg-background">
 		<!-- Promo Banner -->
-		<div class="bg-gradient-to-r from-primary/90 to-primary text-primary-foreground px-4 py-3 text-center">
+		<div
+			class="bg-gradient-to-r from-primary/90 to-primary text-primary-foreground px-4 py-3 text-center"
+		>
 			<p class="text-sm font-medium">
-				🎉 <span class="font-bold">PROMO LAUNCH:</span> Gunakan kode <span class="font-bold underline cursor-pointer bg-white/20 px-1.5 py-0.5 rounded ml-1 border border-white/30 hover:bg-white/30 transition-colors" onclick="navigator.clipboard.writeText('LAUNCH50'); alert('Kode LAUNCH50 disalin!')">LAUNCH50</span> untuk diskon 30% (Terbatas untuk 50 orang pertama!)
+				🎉 <span class="font-bold">PROMO LAUNCH:</span> Gunakan kode <span
+					class="font-bold underline cursor-pointer bg-white/20 px-1.5 py-0.5 rounded ml-1 border border-white/30 hover:bg-white/30 transition-colors"
+					onclick="navigator.clipboard.writeText('LAUNCH50'); alert('Kode LAUNCH50 disalin!')"
+					>LAUNCH50</span
+				> untuk diskon 30% (Terbatas untuk 50 orang pertama!)
 			</p>
 		</div>
 
@@ -375,7 +381,152 @@ import OrderConfig from "../components/OrderConfig.svelte";
 			</div>
 		</section>
 
-		<!-- 3. Kenapa Bukan WhatsApp? -->
+		<!-- 3. Pricing / Daftar Harga -->
+		<section id="harga" class="border-b bg-background py-16 sm:py-24">
+			<div class="container mx-auto px-4">
+				<div class="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
+					<h2
+						class="text-3xl font-bold font-serif tracking-tight text-foreground sm:text-4xl mb-4"
+					>
+						Daftar Harga
+					</h2>
+					<p class="text-muted-foreground text-lg">
+						Harga transparan per halaman dokumen. Pilih kecepatan
+						pengerjaan sesuai kebutuhanmu.
+					</p>
+				</div>
+
+				<div
+					class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto mb-10"
+				>
+					<!-- Reguler -->
+					<div
+						class="relative flex flex-col rounded-2xl border bg-card p-6 shadow-sm hover:shadow-md transition-all duration-300"
+					>
+						<div class="flex items-center justify-between mb-4">
+							<span
+								class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700"
+								>Paling Hemat</span
+							>
+						</div>
+						<h3 class="text-lg font-bold mb-1">Reguler</h3>
+						<p class="text-muted-foreground text-sm mb-4">
+							9 Hari Kerja
+						</p>
+						<div class="mt-auto">
+							<p class="text-3xl font-bold text-foreground">
+								Rp 75.000
+							</p>
+							<p class="text-sm text-muted-foreground">
+								per halaman
+							</p>
+						</div>
+					</div>
+
+					<!-- Standar -->
+					<div
+						class="relative flex flex-col rounded-2xl border bg-card p-6 shadow-sm hover:shadow-md transition-all duration-300"
+					>
+						<div class="flex items-center justify-between mb-4">
+							<span
+								class="inline-flex items-center rounded-full bg-teal-100 px-3 py-1 text-xs font-medium text-teal-700"
+								>Standar</span
+							>
+						</div>
+						<h3 class="text-lg font-bold mb-1">Standar</h3>
+						<p class="text-muted-foreground text-sm mb-4">
+							5 Hari Kerja
+						</p>
+						<div class="mt-auto">
+							<p class="text-3xl font-bold text-foreground">
+								Rp 125.000
+							</p>
+							<p class="text-sm text-muted-foreground">
+								per halaman
+							</p>
+						</div>
+					</div>
+
+					<!-- Ekspres -->
+					<div
+						class="relative flex flex-col rounded-2xl border bg-card p-6 shadow-sm hover:shadow-md transition-all duration-300"
+					>
+						<div class="flex items-center justify-between mb-4">
+							<span
+								class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700"
+								>Prioritas</span
+							>
+						</div>
+						<h3 class="text-lg font-bold mb-1">Ekspres</h3>
+						<p class="text-muted-foreground text-sm mb-4">
+							2 Hari Kerja
+						</p>
+						<div class="mt-auto">
+							<p class="text-3xl font-bold text-foreground">
+								Rp 165.000
+							</p>
+							<p class="text-sm text-muted-foreground">
+								per halaman
+							</p>
+						</div>
+					</div>
+
+					<!-- Kilat -->
+					<div
+						class="relative flex flex-col rounded-2xl border-2 border-amber-400 bg-card p-6 shadow-md hover:shadow-lg transition-all duration-300"
+					>
+						<div class="flex items-center justify-between mb-4">
+							<span
+								class="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700"
+								>⚡ Super Urgent</span
+							>
+						</div>
+						<h3 class="text-lg font-bold mb-1">Kilat</h3>
+						<p class="text-muted-foreground text-sm mb-4">
+							1 Hari Kerja
+						</p>
+						<div class="mt-auto">
+							<p class="text-3xl font-bold text-foreground">
+								Rp 300.000
+							</p>
+							<p class="text-sm text-muted-foreground">
+								per halaman
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Add-on & Notes -->
+				<div class="max-w-2xl mx-auto text-center space-y-4">
+					<div
+						class="inline-flex items-center gap-2 rounded-lg border bg-muted/50 px-4 py-2 text-sm"
+					>
+						<span class="text-muted-foreground"
+							>Tambahan Hard Copy (Cap Basah + Kirim via JNE):</span
+						>
+						<span class="font-bold">Rp 20.000</span>
+					</div>
+					<p class="text-sm text-muted-foreground">
+						Layanan: <strong class="text-foreground"
+							>Terjemahan Tersumpah Indonesia ↔ Arab</strong
+						> · Sertifikat SK Kemenkumham
+					</p>
+					<p class="text-xs text-muted-foreground">
+						Pembayaran via Transfer Bank, QRIS, E-Wallet (GoPay,
+						ShopeePay, DANA, OVO, dll)
+					</p>
+					<a
+						href="#"
+						onclick="window.scrollTo({top: 0, behavior: 'smooth'}); return false;"
+						class="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-md hover:bg-primary/90 transition-transform active:scale-95"
+					>
+						Pesan Sekarang →
+					</a>
+				</div>
+			</div>
+		</section>
+
+		<!-- 4. Kenapa Bukan WhatsApp? -->
 		<section class="border-b bg-background py-16 sm:py-24">
 			<div class="container mx-auto px-4">
 				<div class="text-center max-w-2xl mx-auto mb-12 sm:mb-16">

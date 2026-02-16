@@ -1,0 +1,99 @@
+/**
+ * Duitku Callback Endpoint
+ * 
+ * Called by Duitku's server (not the user's browser) when payment status changes.
+ * Content-Type: x-www-form-urlencoded
+ * Must return HTTP 200 OK.
+ * 
+ * No auth required — validated via signature.
+ */
+import type { APIRoute } from "astro";
+import { createServerClient } from "@supabase/ssr";
+import { verifyCallbackSignature, type DuitkuCallbackParams } from "../../../lib/duitku";
+
+export const prerender = false;
+
+export const POST: APIRoute = async ({ request }) => {
+    try {
+        // 1. Parse x-www-form-urlencoded body
+        const formData = await request.formData();
+        const params: DuitkuCallbackParams = {
+            merchantCode: formData.get('merchantCode') as string || '',
+            amount: formData.get('amount') as string || '',
+            merchantOrderId: formData.get('merchantOrderId') as string || '',
+            productDetail: formData.get('productDetail') as string || '',
+            additionalParam: formData.get('additionalParam') as string || '',
+            paymentCode: formData.get('paymentCode') as string || '',
+            resultCode: formData.get('resultCode') as string || '',
+            merchantUserId: formData.get('merchantUserId') as string || '',
+            reference: formData.get('reference') as string || '',
+            signature: formData.get('signature') as string || '',
+            publisherOrderId: formData.get('publisherOrderId') as string || '',
+            spUserHash: formData.get('spUserHash') as string || '',
+            settlementDate: formData.get('settlementDate') as string || '',
+            issuerCode: formData.get('issuerCode') as string || '',
+        };
+
+        console.log('[Duitku Callback] Received:', {
+            merchantOrderId: params.merchantOrderId,
+            resultCode: params.resultCode,
+            reference: params.reference,
+            amount: params.amount,
+        });
+
+        // 2. Validate required fields
+        if (!params.merchantCode || !params.amount || !params.merchantOrderId || !params.signature) {
+            console.error('[Duitku Callback] Missing required parameters');
+            return new Response('Bad Parameter', { status: 400 });
+        }
+
+        // 3. Verify signature
+        if (!verifyCallbackSignature(params)) {
+            console.error('[Duitku Callback] Invalid signature');
+            return new Response('Bad Signature', { status: 400 });
+        }
+
+        // 4. Use service-role client for admin updates (bypass RLS)
+        // Note: For callback we need a direct Supabase client since we don't have user cookies
+        const supabase = createServerClient(
+            import.meta.env.PUBLIC_SUPABASE_URL,
+            import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+            {
+                cookies: {
+                    getAll() { return []; },
+                    setAll() { },
+                },
+            }
+        );
+
+        // 5. Process based on resultCode
+        // resultCode "00" = Success, "01" = Pending, "02" = Canceled/Failed
+        if (params.resultCode === '00') {
+            // Payment successful
+            const { error: updateError } = await supabase
+                .from('orders')
+                .update({
+                    payment_status: 'paid',
+                    status: 'processing',
+                    duitku_reference: params.reference,
+                })
+                .eq('id', params.merchantOrderId);
+
+            if (updateError) {
+                console.error('[Duitku Callback] Failed to update order:', updateError);
+                // Still return 200 to Duitku — we can retry manually
+            } else {
+                console.log('[Duitku Callback] Order updated to paid:', params.merchantOrderId);
+            }
+        } else {
+            console.log('[Duitku Callback] Non-success resultCode:', params.resultCode, 'for order:', params.merchantOrderId);
+        }
+
+        // Must return 200 OK to Duitku
+        return new Response('OK', { status: 200 });
+    } catch (err) {
+        console.error('[Duitku Callback] Error:', err);
+        // Still return 200 to prevent Duitku from retrying endlessly
+        return new Response('OK', { status: 200 });
+    }
+};

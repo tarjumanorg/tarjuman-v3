@@ -34,6 +34,14 @@ if (order.user_id !== user.id) {
     return Astro.redirect("/404");
 }
 
+// If already paid, redirect to success
+if (order.payment_status === "paid") {
+    return Astro.redirect(`/payment/success/${id}`);
+}
+
+// If we already have a Duitku payment URL, we can show it
+const existingPaymentUrl = order.duitku_payment_url || null;
+
 function formatPrice(price: number) {
     return new Intl.NumberFormat("id-ID", {
         style: "currency",
@@ -41,6 +49,8 @@ function formatPrice(price: number) {
         minimumFractionDigits: 0,
     }).format(price);
 }
+
+const paymentAmount = Math.round(order.final_price || 0);
 ---
 
 <Layout title={`Pembayaran Order #${id?.slice(0, 8)} - Tarjuman`}>
@@ -60,7 +70,7 @@ function formatPrice(price: number) {
                     Konfirmasi Pembayaran
                 </h1>
                 <p class="text-muted-foreground text-sm mt-1">
-                    Selesaikan pembayaran untuk memproses pesananmu.
+                    Pilih metode pembayaran dan selesaikan transaksi.
                 </p>
             </div>
 
@@ -71,7 +81,9 @@ function formatPrice(price: number) {
                         class="flex justify-between py-2 border-b border-border/50"
                     >
                         <span class="text-muted-foreground">Order ID</span>
-                        <span class="font-mono text-sm">{order.id}</span>
+                        <span class="font-mono text-sm"
+                            >{order.id.slice(0, 8)}...</span
+                        >
                     </div>
                     <div
                         class="flex justify-between py-2 border-b border-border/50"
@@ -109,61 +121,231 @@ function formatPrice(price: number) {
                 >
                     <span class="font-semibold text-lg">Total Tagihan</span>
                     <span class="font-bold text-2xl text-primary"
-                        >{formatPrice(order.final_price || 0)}</span
+                        >{formatPrice(paymentAmount)}</span
                     >
                 </div>
 
-                <!-- Payment Methods (Placeholder) -->
+                <!-- Payment Methods -->
                 <div class="space-y-3">
                     <h3 class="font-semibold">Metode Pembayaran</h3>
-                    <div class="grid grid-cols-1 gap-3">
-                        <button
-                            id="mock-pay-btn"
-                            class="flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground p-4 hover:bg-primary/90 transition-colors font-bold shadow-lg"
-                        >
-                            <span>Bayar Sekarang (Mock Success)</span>
-                        </button>
 
-                        <a
-                            href={`https://wa.me/6281234567890?text=${encodeURIComponent(`Halo Tarjuman, saya ingin konfirmasi pembayaran untuk Order ID: ${order.id}.`)}`}
-                            target="_blank"
-                            class="flex items-center justify-center gap-2 rounded-lg border border-input bg-background p-4 hover:bg-accent transition-colors"
+                    <!-- Loading State -->
+                    <div
+                        id="methods-loading"
+                        class="flex items-center justify-center py-8 text-muted-foreground"
+                    >
+                        <svg
+                            class="animate-spin h-5 w-5 mr-2"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
                         >
-                            <span class="font-medium"
-                                >Konfirmasi via WhatsApp (Manual)</span
-                            >
-                        </a>
+                            <circle
+                                class="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                stroke-width="4"></circle>
+                            <path
+                                class="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                            ></path>
+                        </svg>
+                        Memuat metode pembayaran...
+                    </div>
+
+                    <!-- Error State -->
+                    <div id="methods-error" class="hidden text-center py-6">
+                        <p class="text-destructive mb-3">
+                            Gagal memuat metode pembayaran.
+                        </p>
+                        <button
+                            id="retry-btn"
+                            class="text-sm text-primary hover:underline"
+                        >
+                            Coba lagi
+                        </button>
+                    </div>
+
+                    <!-- Methods Grid -->
+                    <div
+                        id="methods-grid"
+                        class="hidden grid grid-cols-2 sm:grid-cols-3 gap-3"
+                    >
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- Pay Button -->
+                    <button
+                        id="pay-btn"
+                        disabled
+                        class="hidden w-full flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground p-4 hover:bg-primary/90 transition-colors font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Bayar Sekarang
+                    </button>
+                </div>
+
+                <!-- Divider -->
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-border/50"></div>
+                    </div>
+                    <div class="relative flex justify-center">
+                        <span class="bg-card px-3 text-xs text-muted-foreground"
+                            >atau</span
+                        >
                     </div>
                 </div>
+
+                <!-- WhatsApp Fallback -->
+                <a
+                    href={`https://wa.me/6285176777470?text=${encodeURIComponent(`Halo Tarjuman, saya ingin konfirmasi pembayaran untuk Order ID: ${order.id}.`)}`}
+                    target="_blank"
+                    class="flex items-center justify-center gap-2 rounded-lg border border-input bg-background p-4 hover:bg-accent transition-colors"
+                >
+                    <span class="font-medium"
+                        >Konfirmasi via WhatsApp (Manual)</span
+                    >
+                </a>
             </div>
         </div>
     </div>
 </Layout>
 
-<script define:vars={{ orderId: id }}>
-    const btn = document.getElementById("mock-pay-btn");
-    btn?.addEventListener("click", async () => {
-        const originalText = btn.innerHTML;
-        btn.innerHTML = "Memproses...";
-        btn.disabled = true;
+<script define:vars={{ orderId: id, paymentAmount, existingPaymentUrl }}>
+    const methodsLoading = document.getElementById("methods-loading");
+    const methodsError = document.getElementById("methods-error");
+    const methodsGrid = document.getElementById("methods-grid");
+    const payBtn = document.getElementById("pay-btn");
+    const retryBtn = document.getElementById("retry-btn");
+
+    let selectedMethod = null;
+
+    // If we already have a payment URL, redirect directly
+    if (existingPaymentUrl) {
+        window.location.href = existingPaymentUrl;
+    }
+
+    async function loadPaymentMethods() {
+        methodsLoading.classList.remove("hidden");
+        methodsError.classList.add("hidden");
+        methodsGrid.classList.add("hidden");
+        payBtn.classList.add("hidden");
+
+        try {
+            const res = await fetch(
+                `/api/duitku/payment-methods?amount=${paymentAmount}`,
+            );
+            if (!res.ok) throw new Error("API error");
+
+            const data = await res.json();
+            const methods = data.methods || [];
+
+            if (methods.length === 0) {
+                throw new Error("No payment methods available");
+            }
+
+            // Render methods
+            methodsGrid.innerHTML = "";
+            methods.forEach((m) => {
+                const card = document.createElement("button");
+                card.type = "button";
+                card.dataset.method = m.paymentMethod;
+                card.className =
+                    "flex flex-col items-center gap-2 p-3 rounded-lg border border-border bg-background hover:border-primary/50 hover:bg-primary/5 transition-all text-center cursor-pointer";
+
+                const fee = parseInt(m.totalFee || "0");
+                const feeText =
+                    fee > 0
+                        ? `+${new Intl.NumberFormat("id-ID").format(fee)}`
+                        : "Gratis";
+
+                card.innerHTML = `
+                    <img src="${m.paymentImage}" alt="${m.paymentName}" class="h-8 object-contain" loading="lazy" />
+                    <span class="text-xs font-medium leading-tight">${m.paymentName}</span>
+                    <span class="text-[10px] text-muted-foreground">Fee: ${feeText}</span>
+                `;
+
+                card.addEventListener("click", () => {
+                    // Deselect all
+                    methodsGrid.querySelectorAll("button").forEach((btn) => {
+                        btn.classList.remove(
+                            "border-primary",
+                            "bg-primary/10",
+                            "ring-2",
+                            "ring-primary/20",
+                        );
+                        btn.classList.add("border-border", "bg-background");
+                    });
+                    // Select this one
+                    card.classList.remove("border-border", "bg-background");
+                    card.classList.add(
+                        "border-primary",
+                        "bg-primary/10",
+                        "ring-2",
+                        "ring-primary/20",
+                    );
+                    selectedMethod = m.paymentMethod;
+                    payBtn.disabled = false;
+                });
+
+                methodsGrid.appendChild(card);
+            });
+
+            methodsLoading.classList.add("hidden");
+            methodsGrid.classList.remove("hidden");
+            payBtn.classList.remove("hidden");
+        } catch (err) {
+            console.error("Failed to load payment methods:", err);
+            methodsLoading.classList.add("hidden");
+            methodsError.classList.remove("hidden");
+        }
+    }
+
+    // Pay button click handler
+    payBtn?.addEventListener("click", async () => {
+        if (!selectedMethod) return;
+
+        const originalText = payBtn.innerHTML;
+        payBtn.innerHTML = `
+            <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            Memproses pembayaran...
+        `;
+        payBtn.disabled = true;
 
         try {
             const res = await fetch(`/api/orders/${orderId}/pay`, {
                 method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ paymentMethod: selectedMethod }),
             });
-            if (res.ok) {
-                // Redirect to success page
-                window.location.href = `/payment/success/${orderId}`;
+
+            const data = await res.json();
+
+            if (res.ok && data.paymentUrl) {
+                // Redirect to Duitku payment page
+                window.location.href = data.paymentUrl;
             } else {
-                alert("Payment failed");
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+                alert(data.error || "Pembayaran gagal. Silakan coba lagi.");
+                payBtn.innerHTML = originalText;
+                payBtn.disabled = false;
             }
         } catch (e) {
             console.error(e);
-            alert("Payment failed");
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+            alert("Terjadi kesalahan. Silakan coba lagi.");
+            payBtn.innerHTML = originalText;
+            payBtn.disabled = false;
         }
     });
+
+    // Retry button
+    retryBtn?.addEventListener("click", loadPaymentMethods);
+
+    // Initial load
+    loadPaymentMethods();
 </script>

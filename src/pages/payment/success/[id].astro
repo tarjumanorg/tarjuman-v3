@@ -7,6 +7,10 @@ const supabase = createClient(Astro);
 
 if (!id) return Astro.redirect("/404");
 
+// Parse Duitku redirect query params
+const resultCode = Astro.url.searchParams.get("resultCode") || "";
+const reference = Astro.url.searchParams.get("reference") || "";
+
 // Auth Check
 const {
     data: { user },
@@ -24,6 +28,15 @@ const { data: order, error } = await supabase
 if (error || !order) return Astro.redirect("/404");
 if (order.user_id !== user.id) return Astro.redirect("/404");
 
+// Determine payment status display
+const isPaid = order.payment_status === "paid" || resultCode === "00";
+const isPending =
+    !isPaid &&
+    (order.payment_status === "pending" ||
+        resultCode === "01" ||
+        resultCode === "");
+const isFailed = resultCode === "02";
+
 // Calculate ETA
 const createdDate = new Date(order.created_at);
 const urgencyDays = order.urgency_days || 3;
@@ -36,42 +49,128 @@ const formattedETA = etaDate.toLocaleDateString("id-ID", {
     month: "long",
     year: "numeric",
 });
+
+// Status config
+const statusConfig = isPaid
+    ? {
+          icon: "check",
+          color: "primary",
+          title: "Alhamdulillah! Pembayaran Diterima",
+          tagText: "Sedang Dikerjakan",
+          tagClass: "text-blue-600 bg-blue-50",
+      }
+    : isFailed
+      ? {
+            icon: "x",
+            color: "destructive",
+            title: "Pembayaran Gagal",
+            tagText: "Gagal",
+            tagClass: "text-red-600 bg-red-50",
+        }
+      : {
+            icon: "clock",
+            color: "amber-500",
+            title: "Menunggu Pembayaran",
+            tagText: "Menunggu Konfirmasi",
+            tagClass: "text-amber-600 bg-amber-50",
+        };
 ---
 
-<Layout title="Pembayaran Berhasil - Tarjuman">
+<Layout title={`${statusConfig.title} - Tarjuman`}>
     <div class="container mx-auto py-20 px-4 max-w-2xl text-center">
         <div class="mb-8 flex justify-center">
-            <div class="rounded-full bg-primary/10 p-6 text-primary">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="48"
-                    height="48"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="lucide lucide-check-circle-2"
-                >
-                    <path
-                        d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
-                    ></path>
-                    <path d="m9 12 2 2 4-4"></path>
-                </svg>
+            <div
+                class={`rounded-full bg-${statusConfig.color}/10 p-6 text-${statusConfig.color}`}
+            >
+                {
+                    isPaid ? (
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="48"
+                            height="48"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                            <path d="m9 12 2 2 4-4" />
+                        </svg>
+                    ) : isFailed ? (
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="48"
+                            height="48"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="m15 9-6 6" />
+                            <path d="m9 9 6 6" />
+                        </svg>
+                    ) : (
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="48"
+                            height="48"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                    )
+                }
             </div>
         </div>
 
         <h1 class="font-serif text-3xl font-bold text-foreground mb-4">
-            Alhamdulillah! Pembayaran Diterima
+            {statusConfig.title}
         </h1>
 
-        <p class="text-lg text-muted-foreground mb-8">
-            Terima kasih telah mempercayakan dokumenmu kepada Tarjuman. <br
-                class="hidden sm:inline"
-            />
-            Penerjemah tersumpah kami telah menerima pesananmu dan akan segera memprosesnya.
-        </p>
+        {
+            isPaid && (
+                <p class="text-lg text-muted-foreground mb-8">
+                    Terima kasih telah mempercayakan dokumenmu kepada Tarjuman.{" "}
+                    <br class="hidden sm:inline" />
+                    Penerjemah tersumpah kami telah menerima pesananmu dan akan
+                    segera memprosesnya.
+                </p>
+            )
+        }
+
+        {
+            isPending && (
+                <p class="text-lg text-muted-foreground mb-8">
+                    Pembayaranmu sedang diproses. Kami akan mengerjakan
+                    dokumenmu segera setelah pembayaran dikonfirmasi.
+                    <br class="hidden sm:inline" />
+                    <span class="text-sm">
+                        Halaman ini bisa ditutup — status akan diperbarui
+                        otomatis di dashboard.
+                    </span>
+                </p>
+            )
+        }
+
+        {
+            isFailed && (
+                <p class="text-lg text-muted-foreground mb-8">
+                    Pembayaran dibatalkan atau gagal. Kamu bisa mencoba lagi
+                    melalui halaman pembayaran.
+                </p>
+            )
+        }
 
         <div
             class="bg-card border border-border rounded-xl p-6 mb-8 text-left max-w-md mx-auto shadow-sm"
@@ -87,26 +186,54 @@ const formattedETA = etaDate.toLocaleDateString("id-ID", {
                 <div class="flex justify-between">
                     <span class="text-muted-foreground">Status</span>
                     <span
-                        class="font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded"
-                        >Sedang Dikerjakan</span
+                        class={`font-medium ${statusConfig.tagClass} px-2 py-0.5 rounded`}
                     >
+                        {statusConfig.tagText}
+                    </span>
                 </div>
-                <div class="flex justify-between">
-                    <span class="text-muted-foreground">Estimasi Selesai</span>
-                    <span class="font-bold text-primary">{formattedETA}</span>
-                </div>
+                {
+                    (isPaid || isPending) && (
+                        <div class="flex justify-between">
+                            <span class="text-muted-foreground">
+                                Estimasi Selesai
+                            </span>
+                            <span class="font-bold text-primary">
+                                {formattedETA}
+                            </span>
+                        </div>
+                    )
+                }
+                {
+                    reference && (
+                        <div class="flex justify-between">
+                            <span class="text-muted-foreground">Referensi</span>
+                            <span class="font-mono text-xs">{reference}</span>
+                        </div>
+                    )
+                }
             </div>
         </div>
 
         <div
             class="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-            <a
-                href="/dashboard"
-                class="w-full sm:w-auto inline-flex items-center justify-center rounded-full bg-primary px-8 py-3 text-sm font-bold text-primary-foreground shadow-lg hover:bg-primary/90 transition-transform active:scale-95"
-            >
-                Lihat Pesanan Saya
-            </a>
+            {
+                isFailed ? (
+                    <a
+                        href={`/payment/${id}`}
+                        class="w-full sm:w-auto inline-flex items-center justify-center rounded-full bg-primary px-8 py-3 text-sm font-bold text-primary-foreground shadow-lg hover:bg-primary/90 transition-transform active:scale-95"
+                    >
+                        Coba Bayar Lagi
+                    </a>
+                ) : (
+                    <a
+                        href="/dashboard"
+                        class="w-full sm:w-auto inline-flex items-center justify-center rounded-full bg-primary px-8 py-3 text-sm font-bold text-primary-foreground shadow-lg hover:bg-primary/90 transition-transform active:scale-95"
+                    >
+                        Lihat Pesanan Saya
+                    </a>
+                )
+            }
             <a
                 href="/"
                 class="w-full sm:w-auto inline-flex items-center justify-center rounded-full border border-input bg-background px-8 py-3 text-sm font-medium hover:bg-accent transition-colors"
