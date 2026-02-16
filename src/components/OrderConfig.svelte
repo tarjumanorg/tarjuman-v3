@@ -64,9 +64,9 @@
 
     // Map urgency (days) to slider index (0 = Reguler/Slowest, 3 = Kilat/Fastest)
     // We reverse the array for display if we want Left=Cheap/Slow, Right=Expensive/Fast
-    // PRICING_TIERS is [Reguler(9), Sedang(5), Ekspres(2), Kilat(1)]
+    // PRICING_TIERS is [Reguler(9), Standar(5), Ekspres(2), Kilat(1)]
     // Index 0: Reguler (9 days)
-    // Index 1: Sedang (5 days)
+    // Index 1: Standar (5 days)
     // Index 2: Ekspres (2 days)
     // Index 3: Kilat (1 day)
 

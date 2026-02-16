@@ -21,7 +21,7 @@ export const PRICING_TIERS: PricingTier[] = [
     },
     {
         id: 'sedang',
-        label: 'Sedang',
+        label: 'Standar',
         description: 'Standar',
         days: 5,
         price: 125000,
