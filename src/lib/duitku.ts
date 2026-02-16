@@ -9,23 +9,24 @@
  * 3. Callback Verification: MD5(merchantCode + amount + merchantOrderId + apiKey)
  */
 
+import { DUITKU_MERCHANT_CODE, DUITKU_API_KEY, DUITKU_BASE_URL, SITE_URL } from 'astro:env/server';
+import { createHash } from 'node:crypto';
+
 // ─── Config ────────────────────────────────────────────────────
 function getConfig() {
-    const merchantCode = import.meta.env.DUITKU_MERCHANT_CODE;
-    const apiKey = import.meta.env.DUITKU_API_KEY;
-    const baseUrl = import.meta.env.DUITKU_BASE_URL || 'https://sandbox.duitku.com';
-    const siteUrl = import.meta.env.SITE_URL || 'https://tarjuman.org';
-
-    if (!merchantCode || !apiKey) {
+    if (!DUITKU_MERCHANT_CODE || !DUITKU_API_KEY) {
         throw new Error('DUITKU_MERCHANT_CODE and DUITKU_API_KEY must be set');
     }
 
-    return { merchantCode, apiKey, baseUrl, siteUrl };
+    return {
+        merchantCode: DUITKU_MERCHANT_CODE,
+        apiKey: DUITKU_API_KEY,
+        baseUrl: DUITKU_BASE_URL,
+        siteUrl: SITE_URL,
+    };
 }
 
 // ─── MD5 (via node:crypto — works in Node.js dev & Cloudflare Workers with nodejs_compat) ──
-import { createHash } from 'node:crypto';
-
 function md5(input: string): string {
     return createHash('md5').update(input).digest('hex');
 }
@@ -102,29 +103,21 @@ export async function getPaymentMethods(amount: number): Promise<DuitkuPaymentMe
     const datetime = new Date().toISOString().replace('T', ' ').substring(0, 19);
     const signature = await sha256(merchantCode + amount + datetime + apiKey);
 
-    console.log('[duitku] getPaymentMethods:', { merchantCode, amount, datetime, baseUrl });
-    console.log('[duitku] Signature input:', `${merchantCode}${amount}${datetime}${apiKey}`);
-
-    const requestBody = {
-        merchantcode: merchantCode,
-        amount: amount,
-        datetime,
-        signature,
-    };
-    console.log('[duitku] Request body:', JSON.stringify(requestBody));
-
     const response = await fetch(
         `${baseUrl}/webapi/api/merchant/paymentmethod/getpaymentmethod`,
         {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody),
+            body: JSON.stringify({
+                merchantcode: merchantCode,
+                amount,
+                datetime,
+                signature,
+            }),
         }
     );
 
     const responseText = await response.text();
-    console.log('[duitku] Response status:', response.status);
-    console.log('[duitku] Response body:', responseText);
 
     if (!response.ok) {
         throw new Error(`Duitku getPaymentMethods failed (${response.status}): ${responseText}`);
@@ -192,8 +185,6 @@ export async function requestTransaction(
         expiryPeriod: 1440, // 24 hours
     };
 
-    console.log('[duitku] requestTransaction body:', JSON.stringify(body, null, 2));
-
     const response = await fetch(
         `${baseUrl}/webapi/api/merchant/v2/inquiry`,
         {
@@ -204,8 +195,6 @@ export async function requestTransaction(
     );
 
     const responseText = await response.text();
-    console.log('[duitku] requestTransaction status:', response.status);
-    console.log('[duitku] requestTransaction response:', responseText);
 
     if (!response.ok) {
         throw new Error(`Duitku requestTransaction failed (${response.status}): ${responseText}`);
