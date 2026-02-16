@@ -20,9 +20,13 @@ export const createClient = (context?: APIContext) => {
                         }));
                     },
                     setAll(cookiesToSet) {
-                        cookiesToSet.forEach(({ name, value, options }) => {
-                            context.cookies.set(name, value, options);
-                        });
+                        try {
+                            cookiesToSet.forEach(({ name, value, options }) => {
+                                context.cookies.set(name, value, options);
+                            });
+                        } catch (error) {
+                            // Silence "ResponseSentError" if headers are already sent
+                        }
                     },
                 },
             }
