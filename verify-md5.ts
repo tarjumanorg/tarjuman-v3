@@ -1,17 +1,19 @@
 
 import { md5 } from './src/lib/md5';
 
-const testString = "DuitkuPaymentGateway";
-const expectedHash = "e9591e6b91170940428470B0971593F6".toLowerCase(); // md5("DuitkuPaymentGateway")
+import { md5 } from './src/lib/md5';
 
-const actualHash = md5(testString);
+const merchantCode = "DS27981";
+const apiKey = "9e3168b8ca459d0c3476e918e58ce48d";
+const merchantOrderId = "ea2f0c42-8b8a-4b9e-b2c7-2e3ef094b739";
+const amount = "75000"; // Confirmed from DB
 
-console.log(`Test String: "${testString}"`);
-console.log(`Expected: ${expectedHash}`);
-console.log(`Actual:   ${actualHash}`);
+// MD5(merchantCode + amount + merchantOrderId + apiKey)
+const signatureInput = merchantCode + amount + merchantOrderId + apiKey;
+const signature = md5(signatureInput);
 
-if (actualHash === expectedHash) {
-    console.log("✅ MD5 Verification PASSED");
-} else {
-    console.error("❌ MD5 Verification FAILED");
-}
+console.log(`Signature Input: "${signatureInput}"`);
+console.log(`Generated Signature: ${signature}`);
+console.log(`\nCURL Command:`);
+console.log(`curl -X POST https://tarjuman.org/api/duitku/callback -d "merchantCode=${merchantCode}&amount=${amount}&merchantOrderId=${merchantOrderId}&signature=${signature}&resultCode=00&reference=MANUAL_TEST"`);
+

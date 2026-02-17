@@ -26,6 +26,7 @@ export default defineConfig({
 
   env: {
     schema: {
+      SUPABASE_SERVICE_ROLE_KEY: envField.string({ context: "server", access: "secret", optional: true }),
       DUITKU_MERCHANT_CODE: envField.string({ context: "server", access: "secret", optional: true }),
       DUITKU_API_KEY: envField.string({ context: "server", access: "secret", optional: true }),
       DUITKU_BASE_URL: envField.string({ context: "server", access: "secret", default: "https://sandbox.duitku.com" }),
