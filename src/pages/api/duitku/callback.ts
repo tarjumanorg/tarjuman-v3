@@ -9,7 +9,7 @@
  */
 import type { APIRoute } from "astro";
 import { createClient } from "@supabase/supabase-js";
-import { getSecret } from "astro:env/server";
+import { SUPABASE_SERVICE_ROLE_KEY } from "astro:env/server";
 import { verifyCallbackSignature, type DuitkuCallbackParams } from "../../../lib/duitku";
 
 export const prerender = false;
@@ -56,14 +56,13 @@ export const POST: APIRoute = async ({ request }) => {
 
         // 4. Use service-role (secret key) client for admin updates (bypass RLS)
         // The callback is a server-to-server call with no user session, so we need admin access.
-        const serviceRoleKey = getSecret('SUPABASE_SERVICE_ROLE_KEY');
-        if (!serviceRoleKey) {
+        if (!SUPABASE_SERVICE_ROLE_KEY) {
             console.error('[Duitku Callback] SUPABASE_SERVICE_ROLE_KEY is not configured');
             return new Response('Server Configuration Error', { status: 500 });
         }
         const supabase = createClient(
             import.meta.env.PUBLIC_SUPABASE_URL,
-            serviceRoleKey,
+            SUPABASE_SERVICE_ROLE_KEY,
         );
 
         // 5. Process based on resultCode
