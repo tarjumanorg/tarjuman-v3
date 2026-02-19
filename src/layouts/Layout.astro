@@ -19,6 +19,21 @@ import "@fontsource-variable/lora";
 		<title>
 			{Astro.props.title || "Tarjuman - Jasa Penerjemah Tersumpah Resmi"}
 		</title>
+
+		<!-- Google tag (gtag.js) -->
+		<script
+			async
+			src="https://www.googletagmanager.com/gtag/js?id=G-JDBZ1K6V1V"
+		></script>
+		<script is:inline>
+			window.dataLayer = window.dataLayer || [];
+			function gtag() {
+				dataLayer.push(arguments);
+			}
+			gtag("js", new Date());
+
+			gtag("config", "G-JDBZ1K6V1V");
+		</script>
 		<meta
 			name="description"
 			content="Jasa penerjemah tersumpah (sworn translator) resmi untuk persyaratan beasiswa Study in Saudi. Diakui Kemenkumham, Kedutaan, & Universitas di Arab Saudi. Cepat & Terpercaya."
