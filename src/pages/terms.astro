@@ -1,0 +1,136 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Syarat & Ketentuan - Tarjuman">
+    <main class="min-h-screen bg-background py-16 sm:py-24">
+        <div class="container mx-auto px-4 max-w-4xl">
+            <h1 class="text-3xl font-bold font-serif mb-8 text-foreground">
+                Syarat & Ketentuan
+            </h1>
+
+            <div class="prose prose-slate max-w-none dark:prose-invert">
+                <p class="lead">
+                    Selamat datang di Tarjuman. Dengan menggunakan layanan kami,
+                    Anda menyetujui syarat dan ketentuan berikut ini. Mohon
+                    dibaca dengan saksama.
+                </p>
+
+                <h3>1. Definisi Layanan</h3>
+                <p>
+                    Tarjuman menyediakan jasa penerjemah tersumpah (sworn
+                    translator) resmi untuk berbagai dokumen hukum, akademik,
+                    dan pribadi. Penerjemah kami terdaftar dan diakui oleh
+                    Kementerian Hukum dan HAM serta instansi terkait lainnya.
+                </p>
+
+                <h3>2. Pesanan & Pembayaran</h3>
+                <ul>
+                    <li>
+                        <strong>Estimasi Harga:</strong> Harga yang ditampilkan di
+                        website adalah estimasi berdasarkan jumlah halaman dan jenis
+                        layanan. Harga final bersifat mengikat setelah pembayaran
+                        dilakukan.
+                    </li>
+                    <li>
+                        <strong>Pembayaran:</strong> 100% pembayaran di muka diperlukan
+                        untuk memulai pengerjaan, kecuali disepakati lain secara tertulis.
+                    </li>
+                    <li>
+                        <strong>Metode Pembayaran:</strong> Kami menerima pembayaran
+                        melalui transfer bank, QRIS, dan E-Wallet melalui gateway
+                        pembayaran resmi kami.
+                    </li>
+                </ul>
+
+                <h3>3. Proses Pengerjaan & Revisi</h3>
+                <ul>
+                    <li>
+                        <strong>Waktu Pengerjaan:</strong> Dihitung berdasarkan hari
+                        kerja (Senin-Jumat, tidak termasuk hari libur nasional) dimulai
+                        setelah pembayaran dikonfirmasi dan dokumen sumber yang jelas
+                        diterima.
+                    </li>
+                    <li>
+                        <strong>Revisi:</strong> Kami memberikan garansi revisi gratis
+                        jika terdapat kesalahan penerjemahan (salah ketik, salah arti)
+                        dari pihak kami. Revisi preferensi gaya bahasa yang tidak
+                        mengubah makna tidak termasuk dalam garansi ini.
+                    </li>
+                    <li>
+                        <strong>Batas Waktu Revisi:</strong> Klaim revisi dapat diajukan
+                        maksimal 14 hari setelah hasil terjemahan dikirimkan.
+                    </li>
+                </ul>
+
+                <h3>4. Pembatalan & Pengembalian Dana (Refund)</h3>
+                <ul>
+                    <li>
+                        <strong>Sebelum Pengerjaan:</strong> Jika Anda membatalkan
+                        pesanan sebelum penerjemah mulai bekerja, kami akan mengembalikan
+                        dana 100% (dikurangi biaya administrasi transfer bank/gateway
+                        jika ada).
+                    </li>
+                    <li>
+                        <strong>Selama Pengerjaan:</strong> Jika pembatalan dilakukan
+                        saat proses pengerjaan sudah berjalan, akan dikenakan biaya
+                        proporsional sesuai progres pekerjaan.
+                    </li>
+                    <li>
+                        <strong>Setelah Selesai:</strong> Pesanan yang sudah selesai
+                        dikerjakan tidak dapat dibatalkan atau direfund.
+                    </li>
+                </ul>
+
+                <h3>5. Tanggung Jawab & Batasan Liabilitas</h3>
+                <ul>
+                    <li>
+                        <strong>Akurasi Dokumen Sumber:</strong> Klien bertanggung
+                        jawab atas kebenaran dan legalitas dokumen sumber yang diberikan.
+                        Tarjuman tidak bertanggung jawab atas isi dokumen sumber.
+                    </li>
+                    <li>
+                        <strong>Hasil Terjemahan:</strong> Kami bertanggung jawab
+                        atas akurasi hasil terjemahan sesuai standar penerjemah tersumpah.
+                    </li>
+                    <li>
+                        <strong>Force Majeure:</strong> Kami tidak bertanggung jawab
+                        atas keterlambatan yang disebabkan oleh kejadian di luar kendali
+                        kami (bencana alam, gangguan jaringan internet massal, dll).
+                    </li>
+                    <li>
+                        <strong>Batas Ganti Rugi:</strong> Maksimal ganti rugi yang
+                        dapat kami berikan terbatas pada nilai nominal jasa yang dibayarkan
+                        oleh klien.
+                    </li>
+                </ul>
+
+                <h3>6. Pengiriman Dokumen</h3>
+                <p>
+                    Pengiriman dokumen fisik (Hard Copy) dilakukan melalui jasa
+                    ekspedisi pihak ketiga. Risiko kehilangan atau kerusakan
+                    selama pengiriman oleh pihak ekspedisi berada di luar
+                    tanggung jawab Tarjuman, namun kami akan membantu proses
+                    klaim asuransi jika pengiriman diasuransikan.
+                </p>
+
+                <h3>7. Perubahan Ketentuan</h3>
+                <p>
+                    Tarjuman berhak mengubah syarat dan ketentuan ini
+                    sewaktu-waktu tanpa pemberitahuan sebelumnya. Perubahan akan
+                    berlaku efektif segera setelah diposting di halaman ini.
+                </p>
+
+                <p class="text-sm text-muted-foreground mt-8">
+                    Terakhir diperbarui: {
+                        new Date().toLocaleDateString("id-ID", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                        })
+                    }
+                </p>
+            </div>
+        </div>
+    </main>
+</Layout>

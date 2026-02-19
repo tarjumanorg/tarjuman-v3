@@ -1,0 +1,143 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Kebijakan Privasi - Tarjuman">
+    <main class="min-h-screen bg-background py-16 sm:py-24">
+        <div class="container mx-auto px-4 max-w-4xl">
+            <h1 class="text-3xl font-bold font-serif mb-8 text-foreground">
+                Kebijakan Privasi
+            </h1>
+
+            <div class="prose prose-slate max-w-none dark:prose-invert">
+                <p class="lead">
+                    Di Tarjuman, kami menghargai privasi Anda dan berkomitmen
+                    untuk melindungi data pribadi serta dokumen yang Anda
+                    percayakan kepada kami. Kebijakan Privasi ini menjelaskan
+                    bagaimana kami mengumpulkan, menggunakan, dan melindungi
+                    informasi Anda.
+                </p>
+
+                <h3>1. Informasi yang Kami Kumpulkan</h3>
+                <p>
+                    Kami mengumpulkan informasi berikut saat Anda menggunakan
+                    layanan kami:
+                </p>
+                <ul>
+                    <li>
+                        <strong>Informasi Pribadi:</strong> Nama, alamat email, nomor
+                        telepon, dan alamat pengiriman untuk keperluan pemrosesan
+                        pesanan.
+                    </li>
+                    <li>
+                        <strong>Dokumen Terjemahan:</strong> File dokumen yang Anda
+                        unggah untuk diterjemahkan.
+                    </li>
+                    <li>
+                        <strong>Informasi Pembayaran:</strong> Detail transaksi yang
+                        diproses melalui gateway pembayaran kami (Duitku). Kami tidak
+                        menyimpan informasi kartu kredit Anda secara langsung.
+                    </li>
+                </ul>
+
+                <h3>2. Penggunaan Informasi</h3>
+                <p>Informasi yang kami kumpulkan digunakan untuk:</p>
+                <ul>
+                    <li>
+                        Memproses dan menyelesaikan pesanan terjemahan Anda.
+                    </li>
+                    <li>
+                        Mengirimkan hasil terjemahan (soft copy dan hard copy
+                        via ekspedisi).
+                    </li>
+                    <li>
+                        Menghubungi Anda terkait status pesanan atau pertanyaan
+                        layanan.
+                    </li>
+                    <li>
+                        Meningkatkan kualitas layanan dan pengalaman pengguna di
+                        website kami.
+                    </li>
+                </ul>
+
+                <h3>3. Keamanan & Retensi Dokumen</h3>
+                <p>Keamanan dokumen Anda adalah prioritas utama kami.</p>
+                <ul>
+                    <li>
+                        <strong>Enkripsi:</strong> Transmisi data dilakukan melalui
+                        koneksi aman (SSL/TLS).
+                    </li>
+                    <li>
+                        <strong>Akses Terbatas:</strong> Dokumen hanya diakses oleh
+                        penerjemah tersumpah yang mengerjakan proyek Anda dan staf
+                        admin terkait.
+                    </li>
+                    <li>
+                        <strong>Penghapusan:</strong> Dokumen sumber dan hasil terjemahan
+                        akan dihapus dari server kami secara otomatis dalam waktu
+                        30 hari setelah pesanan selesai, atau lebih cepat jika Anda
+                        memintanya.
+                    </li>
+                </ul>
+
+                <h3>4. Berbagi Informasi dengan Pihak Ketiga</h3>
+                <p>
+                    Kami tidak menjual atau menyewakan data pribadi Anda. Kami
+                    hanya membagikan informasi dengan pihak ketiga berikut untuk
+                    keperluan operasional:
+                </p>
+                <ul>
+                    <li>
+                        <strong>Gateway Pembayaran (Duitku):</strong> Untuk memproses
+                        pembayaran yang aman.
+                    </li>
+                    <li>
+                        <strong>Jasa Ekspedisi (JNE/TIKI/Pos):</strong> Untuk pengiriman
+                        dokumen fisik (hard copy).
+                    </li>
+                    <li>
+                        <strong>Pihak Berwenang:</strong> Jika diwajibkan oleh hukum
+                        yang berlaku di Indonesia.
+                    </li>
+                </ul>
+
+                <h3>5. Google Auth & Penggunaan Data</h3>
+                <p>
+                    Jika Anda mendaftar atau masuk menggunakan Google, kami
+                    hanya mengakses informasi dasar profil Anda (Nama, Email,
+                    Foto Profil) sesuai izin otorisasi Google. Data ini
+                    digunakan semata-mata untuk mempermudah proses login dan
+                    identifikasi akun Anda di platform kami.
+                </p>
+
+                <h3>6. Layanan Pihak Ketiga</h3>
+                <p>
+                    Website kami mungkin menggunakan layanan analitik (seperti
+                    Google Analytics) untuk membantu kami memahami trafik
+                    website. Layanan ini mungkin menggunakan cookie untuk
+                    mengumpulkan data anonim tentang penggunaan website.
+                </p>
+
+                <h3>7. Hubungi Kami</h3>
+                <p>
+                    Jika Anda memiliki pertanyaan tentang Kebijakan Privasi ini,
+                    silakan hubungi kami melalui:
+                    <br />
+                    Email: support@tarjuman.org
+                    <br />
+                    WhatsApp: +62 812-3456-7890 (Contoh)
+                </p>
+
+                <p class="text-sm text-muted-foreground mt-8">
+                    Terakhir diperbarui: {
+                        new Date().toLocaleDateString("id-ID", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                        })
+                    }
+                </p>
+            </div>
+        </div>
+    </main>
+</Layout>
