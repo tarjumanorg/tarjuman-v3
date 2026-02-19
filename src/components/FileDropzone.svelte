@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { fade } from "svelte/transition";
+    import { fade, slide } from "svelte/transition";
     import {
         orderStore,
         addFile,
@@ -10,13 +10,31 @@
 
     import { Button } from "$lib/components/ui/button";
     import { Card, CardContent } from "$lib/components/ui/card";
-    import { Upload, FileText, X, Loader2, Plus, Minus } from "lucide-svelte";
+    import {
+        Upload,
+        FileText,
+        X,
+        Loader2,
+        Plus,
+        Minus,
+        AlertCircle,
+    } from "lucide-svelte";
 
     export let maxFiles = 10;
     export let maxSizeMB = 50;
 
     let isDragging = false;
     let isProcessing = false;
+    let errorMessage = "";
+    let errorTimeout: ReturnType<typeof setTimeout>;
+
+    function showError(msg: string) {
+        errorMessage = msg;
+        if (errorTimeout) clearTimeout(errorTimeout);
+        errorTimeout = setTimeout(() => {
+            errorMessage = "";
+        }, 5000);
+    }
 
     function handleDragOver(e: DragEvent) {
         e.preventDefault();
@@ -44,34 +62,62 @@
     }
 
     async function processFiles(newFiles: File[]) {
+        errorMessage = ""; // Clear previous errors
         isProcessing = true;
         const currentCount = $orderStore.files.length;
+        let hasError = false;
 
         for (const file of newFiles) {
-            // Check limits inside loop or check total count
-            if (currentCount >= maxFiles) break; // Should verify against updated count if adding multiple
-            // But simplistic approach:
-            if ($orderStore.files.length >= maxFiles) break;
+            if ($orderStore.files.length >= maxFiles) {
+                showError(`Maksimal ${maxFiles} file.`);
+                hasError = true;
+                break;
+            }
 
-            if (file.size > maxSizeMB * 1024 * 1024) continue;
+            // Validate Size
+            if (file.size > maxSizeMB * 1024 * 1024) {
+                showError(
+                    `File "${file.name}" terlalu besar (Max ${maxSizeMB}MB).`,
+                );
+                hasError = true;
+                continue;
+            }
+
+            // Validate Type
+            if (
+                !file.type.startsWith("image/") &&
+                file.type !== "application/pdf"
+            ) {
+                showError(
+                    `File "${file.name}" tidak didukung. Harap upload PDF atau Gambar.`,
+                );
+                hasError = true;
+                continue;
+            }
 
             const id = Math.random().toString(36).substring(7);
             let pageCount = 1;
             let previewUrl = undefined;
 
-            if (file.type === "application/pdf") {
-                pageCount = await countPdfPages(file);
-            } else if (file.type.startsWith("image/")) {
-                previewUrl = URL.createObjectURL(file);
-            }
+            try {
+                if (file.type === "application/pdf") {
+                    pageCount = await countPdfPages(file);
+                } else if (file.type.startsWith("image/")) {
+                    previewUrl = URL.createObjectURL(file);
+                }
 
-            addFile({
-                id,
-                file,
-                name: file.name,
-                pageCount,
-                previewUrl,
-            });
+                addFile({
+                    id,
+                    file,
+                    name: file.name,
+                    pageCount,
+                    previewUrl,
+                });
+            } catch (err) {
+                console.error("Error processing file:", err);
+                showError(`Gagal memproses file "${file.name}".`);
+                hasError = true;
+            }
         }
 
         isProcessing = false;
@@ -79,12 +125,25 @@
 </script>
 
 <div class="w-full space-y-4">
+    <!-- Error Message -->
+    {#if errorMessage}
+        <div
+            transition:slide
+            class="flex items-center gap-2 rounded-md bg-destructive/15 p-3 text-sm text-destructive"
+        >
+            <AlertCircle class="h-4 w-4" />
+            <p>{errorMessage}</p>
+        </div>
+    {/if}
+
     <!-- Dropzone -->
     <div
         class="relative rounded-lg border-2 border-dashed p-4 sm:p-8 text-center transition-colors
     {isDragging
             ? 'border-primary bg-primary/5'
-            : 'border-muted-foreground/25 hover:border-primary/50'}"
+            : errorMessage
+              ? 'border-destructive/50 bg-destructive/5'
+              : 'border-muted-foreground/25 hover:border-primary/50'}"
         ondragover={handleDragOver}
         ondragleave={handleDragLeave}
         ondrop={handleDrop}
