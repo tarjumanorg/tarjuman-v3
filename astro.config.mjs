@@ -33,6 +33,8 @@ export default defineConfig({
       DUITKU_API_KEY: envField.string({ context: "server", access: "secret", optional: true }),
       DUITKU_BASE_URL: envField.string({ context: "server", access: "secret", default: "https://sandbox.duitku.com" }),
       SITE_URL: envField.string({ context: "server", access: "secret", default: "https://tarjuman.org" }),
+      SENDPULSE_ID: envField.string({ context: "server", access: "secret", optional: true }),
+      SENDPULSE_SECRET: envField.string({ context: "server", access: "secret", optional: true }),
     }
   }
 });
