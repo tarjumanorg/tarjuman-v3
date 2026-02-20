@@ -3,11 +3,20 @@ import Layout from "../layouts/Layout.astro";
 import FileDropzone from "../components/FileDropzone.svelte";
 import OrderConfig from "../components/OrderConfig.svelte";
 import StructuredData from "../components/StructuredData.astro";
+import { PRICING_TIERS, formatPrice } from "../lib/pricing";
+
+const minPricePrice = Math.min(...PRICING_TIERS.map((t) => t.price));
+const maxPricePrice = Math.max(...PRICING_TIERS.map((t) => t.price));
+const minPriceString = formatPrice(minPricePrice)
+	.replace(",00", "")
+	.replace("Rp", "Rp ");
+const maxPriceString = formatPrice(maxPricePrice)
+	.replace(",00", "")
+	.replace("Rp", "Rp ");
 
 const seoData = {
 	title: "Jasa Penerjemah Tersumpah Bahasa Arab Resmi & Online | Tarjuman",
-	description:
-		"Jasa penerjemah tersumpah bahasa Arab online. Harga mulai Rp75rb/halaman. Penerjemah resmi SK Kemenkumham untuk keperluan beasiswa Saudi, kedutaan, & legal.",
+	description: `Jasa penerjemah tersumpah bahasa Arab online. Harga mulai ${minPriceString}/halaman. Penerjemah resmi SK Kemenkumham untuk keperluan beasiswa Saudi, kedutaan, & legal.`,
 };
 
 const localBusinessData = {
@@ -15,7 +24,7 @@ const localBusinessData = {
 	image: "https://tarjuman.org/og-image.webp",
 	"@id": "https://tarjuman.org",
 	url: "https://tarjuman.org",
-	priceRange: "Rp75.000 - Rp300.000",
+	priceRange: `${minPriceString} - ${maxPriceString}`,
 	description: seoData.description,
 	address: {
 		"@type": "PostalAddress",
@@ -641,7 +650,7 @@ const localBusinessData = {
 					class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-primary-foreground/20"
 				>
 					<div class="py-4 md:py-0">
-						<p class="text-3xl font-bold mb-2">Rp 75.000</p>
+						<p class="text-3xl font-bold mb-2">{minPriceString}</p>
 						<p class="text-primary-foreground/80 font-medium">
 							Harga Transparan per Halaman
 						</p>
