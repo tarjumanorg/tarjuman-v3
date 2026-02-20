@@ -17,6 +17,7 @@
     "@supabase/supabase-js": "^2.95.3",
     "@tailwindcss/vite": "^4.1.18",
     "astro": "^5.17.1",
+    "astro-seo": "^1.1.0",
     "date-fns": "^4.1.0",
     "idb-keyval": "^6.2.2",
     "jszip": "^3.10.1",

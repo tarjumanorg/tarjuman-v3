@@ -2,12 +2,33 @@
 import Layout from "../layouts/Layout.astro";
 import FileDropzone from "../components/FileDropzone.svelte";
 import OrderConfig from "../components/OrderConfig.svelte";
+import StructuredData from "../components/StructuredData.astro";
+
+const seoData = {
+	title: "Jasa Penerjemah Tersumpah Bahasa Arab Resmi & Online | Tarjuman",
+	description:
+		"Jasa penerjemah tersumpah bahasa Arab online. Harga mulai Rp75rb/halaman. Penerjemah resmi SK Kemenkumham untuk keperluan beasiswa Saudi, kedutaan, & legal.",
+};
+
+const localBusinessData = {
+	name: "Tarjuman",
+	image: "https://tarjuman.org/og-image.jpg",
+	"@id": "https://tarjuman.org",
+	url: "https://tarjuman.org",
+	priceRange: "Rp75.000 - Rp300.000",
+	description: seoData.description,
+	address: {
+		"@type": "PostalAddress",
+		addressCountry: "ID",
+	},
+};
 ---
 
-<Layout title="Tarjuman - Jasa Penerjemah Tersumpah Modern">
+<Layout title={seoData.title} description={seoData.description}>
+	<StructuredData type="LocalBusiness" data={localBusinessData} />
 	<main class="min-h-screen bg-background">
 		<!-- Promo Banner -->
-		<div
+		<aside
 			class="bg-gradient-to-r from-primary/90 to-primary text-primary-foreground px-4 py-3 text-center"
 		>
 			<p class="text-sm font-medium">
@@ -17,7 +38,7 @@ import OrderConfig from "../components/OrderConfig.svelte";
 					>LAUNCH50</span
 				> untuk diskon 30% (Terbatas untuk 50 orang pertama!)
 			</p>
-		</div>
+		</aside>
 
 		<!-- Hero Section -->
 		<section class="relative overflow-hidden pt-4 pb-16 sm:pt-8 sm:pb-24">

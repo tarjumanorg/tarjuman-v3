@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import StructuredData from "../components/StructuredData.astro";
 import { createClient } from "../lib/supabase";
 import {
     Calendar,
@@ -100,11 +101,11 @@ const faqSchema = {
 ---
 
 <Layout
-    title={`Syarat & Checklist Beasiswa Arab Saudi ${currentYear} - Panduan Lengkap`}
-    description={`Persiapkan dokumen beasiswa Study in Saudi ${currentYear} dengan benar. Cek syarat wajib, hindari kesalahan fatal, dan hitung biaya terjemahan tersumpah di sini.`}
+    title={`Syarat & Checklist Dokumen Pendaftaran Beasiswa Arab Saudi ${currentYear}`}
+    description={`Persiapkan dokumen terjemah ijazah & transkrip untuk Study in Saudi ${currentYear}. Cek syarat wajib, hindari kesalahan fatal pemberkasan, dan hitung biayanya.`}
 >
-    <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
-    <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+    <StructuredData type="Article" data={schemaData} />
+    <StructuredData type="FAQPage" data={faqSchema} />
 
     <div class="bg-background min-h-screen pb-12">
         <!-- Header / Breadcrumb Area -->
