@@ -11,6 +11,7 @@ import type { APIRoute } from "astro";
 import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_SERVICE_ROLE_KEY } from "astro:env/server";
 import { verifyCallbackSignature, type DuitkuCallbackParams } from "../../../lib/duitku";
+import { sendOrderConfirmationEmail } from "../../../lib/sendpulse";
 
 export const prerender = false;
 
@@ -69,20 +70,42 @@ export const POST: APIRoute = async ({ request }) => {
         // resultCode "00" = Success, "01" = Pending, "02" = Canceled/Failed
         if (params.resultCode === '00') {
             // Payment successful
-            const { error: updateError } = await supabase
+            const { data: orderData, error: updateError } = await supabase
                 .from('orders')
                 .update({
                     payment_status: 'paid',
                     status: 'processing',
                     duitku_reference: params.reference,
                 })
-                .eq('id', params.merchantOrderId);
+                .eq('id', params.merchantOrderId)
+                .select('user_email, user_id')
+                .single();
 
             if (updateError) {
                 console.error('[Duitku Callback] Failed to update order:', updateError);
                 // Still return 200 to Duitku — we can retry manually
             } else {
                 console.log('[Duitku Callback] Order updated to paid:', params.merchantOrderId);
+
+                // Fetch user name for the email
+                let userName = "Customer";
+                if (orderData?.user_id) {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('full_name')
+                        .eq('id', orderData.user_id)
+                        .single();
+                    if (profile?.full_name) userName = profile.full_name;
+                }
+
+                if (orderData?.user_email) {
+                    try {
+                        await sendOrderConfirmationEmail(orderData.user_email, userName, { orderId: params.merchantOrderId });
+                        console.log('[SendPulse] Order confirmation email sent to:', orderData.user_email);
+                    } catch (emailErr) {
+                        console.error('[SendPulse] Failed to send order confirmation:', emailErr);
+                    }
+                }
             }
         } else {
             console.log('[Duitku Callback] Non-success resultCode:', params.resultCode, 'for order:', params.merchantOrderId);
