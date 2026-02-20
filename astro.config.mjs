@@ -2,12 +2,14 @@
 import { defineConfig, envField } from 'astro/config';
 
 import svelte from '@astrojs/svelte';
+import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import cloudflare from '@astrojs/cloudflare';
 
 // https://astro.build/config
 export default defineConfig({
-  integrations: [svelte()],
+  site: 'https://tarjuman.org',
+  integrations: [svelte(), sitemap()],
 
   vite: {
     plugins: [tailwindcss()]
