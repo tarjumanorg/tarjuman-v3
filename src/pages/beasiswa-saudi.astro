@@ -35,31 +35,23 @@ const totalPagesMax =
 const estimatedMin = totalPagesMin * BASE_PRICE;
 const estimatedMax = totalPagesMax * BASE_PRICE;
 
-function formatPrice(price: number) {
-    return new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
-        minimumFractionDigits: 0,
-    }).format(price);
-}
-
 // Structured Data (JSON-LD)
 const schemaData = {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: `Panduan Lengkap & Checklist Dokumen Beasiswa Arab Saudi ${currentYear}`,
-    image: "https://tarjuman.id/og-saudi.jpg", // Placeholder
+    image: "https://tarjuman.org/og-image.webp",
     author: {
         "@type": "Organization",
         name: "Tarjuman - Jasa Penerjemah Tersumpah",
-        url: "https://tarjuman.id",
+        url: "https://tarjuman.org",
     },
     publisher: {
         "@type": "Organization",
         name: "Tarjuman",
         logo: {
             "@type": "ImageObject",
-            url: "https://tarjuman.id/logo.png",
+            url: "https://tarjuman.org/logo.png",
         },
     },
     datePublished: "2026-02-16",

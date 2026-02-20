@@ -49,3 +49,11 @@ export const getTierByDays = (days: number): PricingTier => {
     // Exact match or closest lower tier (though logic should enforce exact mapping now)
     return PRICING_TIERS.find(t => t.days === days) || PRICING_TIERS[0];
 };
+
+export function formatPrice(price: number) {
+    return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0,
+    }).format(price);
+}
