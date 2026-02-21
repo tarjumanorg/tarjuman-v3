@@ -7,7 +7,12 @@ const supabase = createClient(
 );
 
 async function check() {
-    const { data, error } = await supabase
+    console.log("Testing exact relation grab");
+
+    // Test simulating the callback DB grab
+    const testId = "d98d9a4b-82f3-4af5-9089-c3cb73933122"; // latest order for kjinae09
+
+    const { data: updatedOrder, error: updateError } = await supabase
         .from('orders')
         .select(`
             id, 
@@ -17,11 +22,21 @@ async function check() {
                 full_name
             )
         `)
-        .limit(1)
+        .eq('id', testId)
         .single();
 
-    console.log("Error:", error);
-    console.log("Data shape:", JSON.stringify(data, null, 2));
+    console.log("Fetch Error:", updateError);
+    // console.log("Data shape:", JSON.stringify(updatedOrder, null, 2));
+
+    if (updatedOrder) {
+        const profiles = updatedOrder.profiles;
+        // See how it behaves natively with the (profiles as any) casts we have in callback.ts
+        const userEmail = (profiles)?.email;
+        const userName = (profiles)?.full_name || "User";
+
+        console.log("userEmail:", userEmail);
+        console.log("userName:", userName);
+    }
 }
 
 check();

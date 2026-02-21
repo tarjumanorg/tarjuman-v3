@@ -11,6 +11,7 @@ import type { APIRoute } from "astro";
 import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_SERVICE_ROLE_KEY } from "astro:env/server";
 import { verifyCallbackSignature, type DuitkuCallbackParams } from "../../../lib/duitku";
+import { sendEmail } from "../../../lib/sendpulse";
 
 export const prerender = false;
 
@@ -101,7 +102,6 @@ export const POST: APIRoute = async ({ request }) => {
                     const userName = (profiles as any)?.full_name || "User";
 
                     if (userEmail) {
-                        const { sendEmail } = await import("../../../lib/sendpulse");
                         await sendEmail({
                             to: userEmail,
                             toName: userName,
