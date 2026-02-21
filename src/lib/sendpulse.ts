@@ -1,31 +1,4 @@
-import sendpulse from "sendpulse-api";
-import { SENDPULSE_ID, SENDPULSE_SECRET } from "astro:env/server";
-
-let _initialized = false;
-
-/**
- * Initializes the SendPulse REST client if not already initialized.
- * Rejects if credentials are not configured.
- */
-async function ensureInit(): Promise<void> {
-    if (_initialized) return;
-
-    if (!SENDPULSE_ID || !SENDPULSE_SECRET) {
-        throw new Error("SENDPULSE credentials are not configured in environment variables.");
-    }
-
-    return new Promise((resolve, reject) => {
-        // SendPulse uses a file cache for the token. /tmp is usually suitable on serverless/Node.
-        sendpulse.init(SENDPULSE_ID, SENDPULSE_SECRET, "/tmp/", (token: any) => {
-            if (token && token.is_error) {
-                reject(new Error(`SendPulse init error: ${token.message}`));
-            } else {
-                _initialized = true;
-                resolve();
-            }
-        });
-    });
-}
+import { SENDPULSE_API_ID, SENDPULSE_API_SECRET } from "astro:env/server";
 
 export type EmailPayload = {
     to: string;
@@ -35,17 +8,61 @@ export type EmailPayload = {
     text?: string;
 };
 
+// We cache the token in memory for the duration of this Edge worker's lifecycle
+let _token: string | null = null;
+let _tokenExpiry: number = 0;
+
 /**
- * Sends a transactional email using the SendPulse REST API.
+ * Initializes the SendPulse token if not valid.
+ */
+async function ensureInit(): Promise<void> {
+    if (_token && Date.now() < _tokenExpiry) {
+        return;
+    }
+
+    if (!SENDPULSE_API_ID || !SENDPULSE_API_SECRET) {
+        throw new Error("SENDPULSE credentials are not configured in environment variables.");
+    }
+
+    const res = await fetch('https://api.sendpulse.com/oauth/access_token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            grant_type: 'client_credentials',
+            client_id: SENDPULSE_API_ID,
+            client_secret: SENDPULSE_API_SECRET
+        })
+    });
+
+    if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`SendPulse init error: ${res.status} ${errorText}`);
+    }
+
+    const data = await res.json();
+    if (!data.access_token) {
+        throw new Error("SendPulse init error: No access token returned");
+    }
+
+    _token = data.access_token;
+    // expires_in is in seconds, we subtract 60s as a safety margin
+    _tokenExpiry = Date.now() + ((data.expires_in - 60) * 1000);
+}
+
+/**
+ * Sends a transactional email using the SendPulse REST API via fetch.
  * 
  * @param payload Object containing email fields.
- * @returns Boolean indicating success (or throws).
+ * @returns Boolean indicating success.
  */
 export async function sendEmail({ to, toName, subject, html, text }: EmailPayload): Promise<boolean> {
     await ensureInit();
 
+    // SendPulse SMTP API requires base64 encoded HTML
+    const htmlBase64 = Buffer.from(html, "utf-8").toString("base64");
+
     const emailDetails = {
-        html: html,
+        html: htmlBase64,
         text: text || "Please view this email in an HTML compatible client.",
         subject: subject,
         from: {
@@ -60,15 +77,27 @@ export async function sendEmail({ to, toName, subject, html, text }: EmailPayloa
         ]
     };
 
-    return new Promise((resolve, reject) => {
-        sendpulse.smtpSendMail((response: any) => {
-            if (response && response.is_error) {
-                console.error("[SendPulse] Failed to send email:", response);
-                reject(new Error(`Failed to send email: ${response.message}`));
-            } else {
-                console.log(`[SendPulse] Email sent successfully to ${to}`);
-                resolve(true);
-            }
-        }, emailDetails);
+    const res = await fetch("https://api.sendpulse.com/smtp/emails", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${_token}`
+        },
+        body: JSON.stringify({ email: emailDetails })
     });
+
+    if (!res.ok) {
+        const body = await res.text();
+        console.error("[SendPulse] Failed to send email:", res.status, body);
+        throw new Error(`Failed to send email: ${res.statusText}`);
+    }
+
+    const data = await res.json();
+    if (data.is_error || data.result === false) {
+        console.error("[SendPulse] Failed to send email response:", data);
+        throw new Error(`Failed to send email: ${data.message || 'Unknown error'}`);
+    }
+
+    console.log(`[SendPulse] Email sent successfully to ${to}`);
+    return true;
 }
