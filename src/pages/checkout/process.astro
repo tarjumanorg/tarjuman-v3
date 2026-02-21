@@ -1,0 +1,15 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import ProcessOrder from "../../components/ProcessOrder.svelte";
+---
+
+<Layout
+    title="Memproses Pesanan - Tarjuman"
+    description="Sedang memproses pesanan Anda."
+>
+    <main
+        class="min-h-screen bg-background flex flex-col items-center justify-center p-4"
+    >
+        <ProcessOrder client:only="svelte" />
+    </main>
+</Layout>
