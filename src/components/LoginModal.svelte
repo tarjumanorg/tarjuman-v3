@@ -26,7 +26,7 @@
     }
 
     function loginWithGoogle() {
-        window.location.href = `/api/auth/signin?redirect=/`;
+        window.location.href = `/api/auth/signin?redirect=/checkout/process`;
     }
 </script>
 

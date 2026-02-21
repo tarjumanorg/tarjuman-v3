@@ -102,23 +102,6 @@
         // Try to restore state on load
         if (await restoreOrderState()) {
             console.log("Order state restored from storage");
-
-            // Check if we were interrupted by login
-            const supabase = createClient();
-            const {
-                data: { user },
-            } = await supabase.auth.getUser();
-            const pendingOrder = localStorage.getItem("pendingOrder");
-
-            if (
-                user &&
-                pendingOrder === "true" &&
-                $orderStore.files.length > 0
-            ) {
-                console.log("Auto-resuming order creation...");
-                localStorage.removeItem("pendingOrder");
-                await handlePayment();
-            }
         }
         isRestoring = false;
     });
@@ -143,15 +126,17 @@
         if (!user) {
             // Save state *before* showing modal/redirecting
             await saveOrderState();
-            // Set flag to auto-resume after login
+            // Set flag to auto-resume after login (read by process.astro)
             localStorage.setItem("pendingOrder", "true");
 
             // Show the Login Modal (Bottom Sheet)
+            // It will redirect to /checkout/process
             showLoginModal = true;
             isLoading = false;
             return;
         }
 
+        // ... existing handlePayment logic for authenticated users
         try {
             const files = $orderStore.files;
             const uploadedFiles = [];
