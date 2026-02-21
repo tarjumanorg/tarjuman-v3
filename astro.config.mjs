@@ -35,6 +35,8 @@ export default defineConfig({
       SITE_URL: envField.string({ context: "server", access: "secret", default: "https://tarjuman.org" }),
       SENDPULSE_API_ID: envField.string({ context: "server", access: "secret", optional: true }),
       SENDPULSE_API_SECRET: envField.string({ context: "server", access: "secret", optional: true }),
+      SENDPULSE_ID: envField.string({ context: "server", access: "secret", optional: true }),
+      SENDPULSE_SECRET: envField.string({ context: "server", access: "secret", optional: true }),
     }
   }
 });

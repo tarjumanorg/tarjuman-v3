@@ -1,4 +1,4 @@
-import { SENDPULSE_API_ID, SENDPULSE_API_SECRET } from "astro:env/server";
+import { SENDPULSE_API_ID, SENDPULSE_API_SECRET, SENDPULSE_ID, SENDPULSE_SECRET } from "astro:env/server";
 
 export type EmailPayload = {
     to: string;
@@ -16,11 +16,14 @@ let _tokenExpiry: number = 0;
  * Initializes the SendPulse token if not valid.
  */
 async function ensureInit(): Promise<void> {
+    const id = SENDPULSE_API_ID || SENDPULSE_ID;
+    const secret = SENDPULSE_API_SECRET || SENDPULSE_SECRET;
+
     if (_token && Date.now() < _tokenExpiry) {
         return;
     }
 
-    if (!SENDPULSE_API_ID || !SENDPULSE_API_SECRET) {
+    if (!id || !secret) {
         throw new Error("SENDPULSE credentials are not configured in environment variables.");
     }
 
@@ -29,8 +32,8 @@ async function ensureInit(): Promise<void> {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             grant_type: 'client_credentials',
-            client_id: SENDPULSE_API_ID,
-            client_secret: SENDPULSE_API_SECRET
+            client_id: id,
+            client_secret: secret
         })
     });
 
