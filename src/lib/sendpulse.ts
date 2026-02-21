@@ -59,7 +59,14 @@ export async function sendEmail({ to, toName, subject, html, text }: EmailPayloa
     await ensureInit();
 
     // SendPulse SMTP API requires base64 encoded HTML
-    const htmlBase64 = Buffer.from(html, "utf-8").toString("base64");
+    // We use a modern, universally supported Web API method because `Buffer` is not available on Cloudflare Pages
+    const bytes = new TextEncoder().encode(html);
+    let binString = '';
+    // A loop prevents 'Maximum call stack size exceeded' errors when dealing with large HTML strings
+    for (let i = 0; i < bytes.byteLength; i++) {
+        binString += String.fromCodePoint(bytes[i]);
+    }
+    const htmlBase64 = btoa(binString);
 
     const emailDetails = {
         html: htmlBase64,
