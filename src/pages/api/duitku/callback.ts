@@ -69,20 +69,57 @@ export const POST: APIRoute = async ({ request }) => {
         // resultCode "00" = Success, "01" = Pending, "02" = Canceled/Failed
         if (params.resultCode === '00') {
             // Payment successful
-            const { error: updateError } = await supabase
+            const { data: updatedOrder, error: updateError } = await supabase
                 .from('orders')
                 .update({
                     payment_status: 'paid',
                     status: 'processing',
                     duitku_reference: params.reference,
                 })
-                .eq('id', params.merchantOrderId);
+                .eq('id', params.merchantOrderId)
+                .select(`
+                    id, 
+                    user_id,
+                    profiles (
+                        email,
+                        full_name
+                    )
+                `)
+                .single();
 
             if (updateError) {
                 console.error('[Duitku Callback] Failed to update order:', updateError);
                 // Still return 200 to Duitku — we can retry manually
             } else {
                 console.log('[Duitku Callback] Order updated to paid:', params.merchantOrderId);
+
+                // Send 'Processing' email
+                try {
+                    const profiles = updatedOrder?.profiles;
+                    // Supabase returns related profile as either generic or array depending on relation, usually an object on many-to-one
+                    const userEmail = (profiles as any)?.email;
+                    const userName = (profiles as any)?.full_name || "User";
+
+                    if (userEmail) {
+                        const { sendEmail } = await import("../../../lib/sendpulse");
+                        await sendEmail({
+                            to: userEmail,
+                            toName: userName,
+                            subject: "We're processing your order!",
+                            html: `
+                                <h2>Payment Received</h2>
+                                <p>Hi ${userName},</p>
+                                <p>Thank you for your payment!</p>
+                                <p>Your order for translation services (Order ID: <b>${updatedOrder.id}</b>) is now being processed.</p>
+                                <p>We will notify you once your draft is ready for review.</p>
+                                <br/>
+                                <p>Best regards,<br/>The Tarjuman Team</p>
+                            `
+                        });
+                    }
+                } catch (e) {
+                    console.error("[Email] Failed to send processing email:", e);
+                }
             }
         } else {
             console.log('[Duitku Callback] Non-success resultCode:', params.resultCode, 'for order:', params.merchantOrderId);
