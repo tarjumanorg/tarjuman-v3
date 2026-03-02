@@ -7,5 +7,6 @@ trigger: always_on
 3. **Always research before implementing something new, with `context7` or web search**
 4. If an error is persistent, step back to research the root cause.
 5. The main rule is **Efficiency** and **DRY**.
-6. **always** use `supabase-tarjuman` if you need *anything* with supabase.
+6. **always** use `supabase-tarjuman` mcp tools if you need *anything* with supabase. do not use supabse cli.
 7. **always** use `shadcn-svelte` components if possible.
+8. run check with `npx astro check`.
