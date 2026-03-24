@@ -32,7 +32,14 @@ function formatPrice(price: number) {
     }).format(price);
 }
 
-function getStatusLabel(status: string) {
+function getStatusLabel(order: any) {
+    const status = order.status;
+    const paymentStatus = order.payment_status;
+
+    if (status === "payment_pending" && paymentStatus === "pending") {
+        return "Menunggu Verifikasi";
+    }
+
     const labels: Record<string, string> = {
         payment_pending: "Menunggu Pembayaran",
         paid: "Dibayar",
@@ -43,7 +50,14 @@ function getStatusLabel(status: string) {
     return labels[status] || status;
 }
 
-function getStatusBadge(status: string) {
+function getStatusBadge(order: any) {
+    const status = order.status;
+    const paymentStatus = order.payment_status;
+
+    if (status === "payment_pending" && paymentStatus === "pending") {
+        return "bg-amber-100 text-amber-800 border-amber-200";
+    }
+
     switch (status) {
         case "payment_pending":
             return "bg-yellow-100 text-yellow-800 border-yellow-200";
@@ -87,9 +101,9 @@ function getStatusBadge(status: string) {
                     </p>
                 </div>
                 <span
-                    class={`px-3 py-1 rounded-full text-sm font-bold border ${getStatusBadge(order.status || "")}`}
+                    class={`px-3 py-1 rounded-full text-sm font-bold border ${getStatusBadge(order)}`}
                 >
-                    {getStatusLabel(order.status || "")}
+                    {getStatusLabel(order)}
                 </span>
             </div>
 
@@ -239,7 +253,7 @@ function getStatusBadge(status: string) {
                 class="bg-muted/20 p-6 border-t border-border flex justify-end"
             >
                 {
-                    order.status === "payment_pending" && (
+                    (order.status === "payment_pending" && order.payment_status !== "pending") && (
                         <a
                             href={`/payment/${order.id}`}
                             class="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90 transition-colors"

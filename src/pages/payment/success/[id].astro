@@ -7,9 +7,8 @@ const supabase = createClient(Astro);
 
 if (!id) return Astro.redirect("/404");
 
-// Parse Duitku redirect query params
-const resultCode = Astro.url.searchParams.get("resultCode") || "";
-const reference = Astro.url.searchParams.get("reference") || "";
+// Parse transfer proof query params (if any)
+const isPaymentJustCompleted = Astro.url.searchParams.get("success") === "true";
 
 // Auth Check
 const {
@@ -29,13 +28,13 @@ if (error || !order) return Astro.redirect("/404");
 if (order.user_id !== user.id) return Astro.redirect("/404");
 
 // Determine payment status display
-const isPaid = order.payment_status === "paid" || resultCode === "00";
+const isPaid = order.payment_status === "paid" || order.status === "processing";
 const isPending =
     !isPaid &&
     (order.payment_status === "pending" ||
-        resultCode === "01" ||
-        resultCode === "");
-const isFailed = resultCode === "02";
+        order.payment_status === "pending_verification");
+const isFailed =
+    order.payment_status === "failed" || order.payment_status === "cancelled";
 
 // Calculate ETA
 const createdDate = new Date(order.created_at);
@@ -63,15 +62,15 @@ const statusConfig = isPaid
       ? {
             icon: "x",
             color: "destructive",
-            title: "Pembayaran Gagal",
-            tagText: "Gagal",
+            title: "Pembayaran Dibatalkan",
+            tagText: "Batal",
             tagClass: "text-red-600 bg-red-50",
         }
       : {
             icon: "clock",
             color: "amber-500",
-            title: "Menunggu Pembayaran",
-            tagText: "Menunggu Konfirmasi",
+            title: "Menunggu Verifikasi",
+            tagText: "Sedang Diverifikasi",
             tagClass: "text-amber-600 bg-amber-50",
         };
 ---
@@ -152,12 +151,13 @@ const statusConfig = isPaid
         {
             isPending && (
                 <p class="text-lg text-muted-foreground mb-8">
-                    Pembayaranmu sedang diproses. Kami akan mengerjakan
-                    dokumenmu segera setelah pembayaran dikonfirmasi.
+                    Bukti transfer Anda telah kami terima dan sedang dalam
+                    antrean verifikasi. Tim kami akan segera memproses pesanan
+                    Anda—Anda tidak perlu melakukan tindakan apa pun lagi saat ini.
                     <br class="hidden sm:inline" />
                     <span class="text-sm">
-                        Halaman ini bisa ditutup — status akan diperbarui
-                        otomatis di dashboard.
+                        Anda akan menerima email pemberitahuan saat pesanan
+                        mulai dikerjakan.
                     </span>
                 </p>
             )
@@ -204,10 +204,12 @@ const statusConfig = isPaid
                     )
                 }
                 {
-                    reference && (
+                    order.duitku_reference && (
                         <div class="flex justify-between">
                             <span class="text-muted-foreground">Referensi</span>
-                            <span class="font-mono text-xs">{reference}</span>
+                            <span class="font-mono text-xs">
+                                {order.duitku_reference}
+                            </span>
                         </div>
                     )
                 }

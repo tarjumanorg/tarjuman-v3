@@ -40,19 +40,15 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     }
 
     // 3. Create Order
-    // Assuming 'orders' table exists with these fields. 
-    // We need to check the schema or fit current schema.
-    // Based on Task 2 (Schema), we have 'orders' table.
-
-    // Need to get profile_id? Or just user_id linking?
-    // Usually orders.user_id references auth.users or public.profiles.
+    const uniqueAmount = Math.floor(Math.random() * 900) + 100;
 
     const { data: orderData, error: orderError } = await supabase
         .from("orders")
         .insert({
             user_id: user.id,
             status: "payment_pending", // Initial status
-            final_price: totalPrice,
+            final_price: totalPrice + uniqueAmount,
+            unique_amount: uniqueAmount,
             urgency_days: urgencyDays,
             physical_copy: hardCopy,
             hard_copy_address: hardCopy ? hardCopyAddress : null,

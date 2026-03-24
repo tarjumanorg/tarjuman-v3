@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { createClient } from "../../lib/supabase";
+import { actions } from "astro:actions";
 
 const { id } = Astro.params;
 const supabase = createClient(Astro);
@@ -15,6 +16,12 @@ const {
 
 if (!user) {
     return Astro.redirect(`/login?redirect=/payment/${id}`);
+}
+
+// Handle action result early
+const result = Astro.getActionResult(actions.submitTransferProof);
+if (result && !result.error && result.data?.success) {
+    return Astro.redirect(`/payment/success/${id}`);
 }
 
 // Fetch order details
@@ -34,8 +41,8 @@ if (order.user_id !== user.id) {
     return Astro.redirect("/404");
 }
 
-// If already paid, redirect to success
-if (order.payment_status === "paid") {
+// If already paid or pending verification, redirect to success
+if (order.payment_status === "paid" || order.payment_status === "pending") {
     return Astro.redirect(`/payment/success/${id}`);
 }
 
@@ -47,6 +54,7 @@ function formatPrice(price: number) {
     }).format(price);
 }
 
+// The exact amount including the unique_amount 
 const paymentAmount = Math.round(order.final_price || 0);
 ---
 
@@ -64,283 +72,209 @@ const paymentAmount = Math.round(order.final_price || 0);
         >
             <div class="bg-primary/5 p-6 border-b border-border">
                 <h1 class="font-serif text-2xl font-bold text-foreground">
-                    Konfirmasi Pembayaran
+                    Instruksi Pembayaran
                 </h1>
                 <p class="text-muted-foreground text-sm mt-1">
-                    Pilih metode pembayaran dan selesaikan transaksi.
+                    Lakukan transfer bank lalu unggah bukti pembayaran Anda.
                 </p>
             </div>
 
-            <div class="p-6 space-y-6">
+            <div class="p-6 space-y-8">
                 <!-- Order Summary -->
                 <div class="space-y-4">
-                    <div
-                        class="flex justify-between py-2 border-b border-border/50"
-                    >
+                    <div class="flex justify-between py-2 border-b border-border/50">
                         <span class="text-muted-foreground">Order ID</span>
-                        <span class="font-mono text-sm"
-                            >{order.id.slice(0, 8)}...</span
-                        >
+                        <span class="font-mono text-sm">{order.id.slice(0, 8)}...</span>
                     </div>
-                    <div
-                        class="flex justify-between py-2 border-b border-border/50"
-                    >
-                        <span class="text-muted-foreground">Estimasi Waktu</span
-                        >
-                        <span class="font-medium"
-                            >{order.urgency_days} Hari Kerja</span
-                        >
-                    </div>
-                    <div
-                        class="flex justify-between py-2 border-b border-border/50"
-                    >
-                        <span class="text-muted-foreground">Jumlah Dokumen</span
-                        >
-                        <span class="font-medium"
-                            >{order.order_files.length} File</span
-                        >
-                    </div>
-                    <div
-                        class="flex justify-between py-2 border-b border-border/50"
-                    >
-                        <span class="text-muted-foreground"
-                            >Total Halaman (Est)</span
-                        >
-                        <span class="font-medium"
-                            >{order.page_count_estimated} Halaman</span
-                        >
+                    <div class="flex justify-between py-2 border-b border-border/50">
+                        <span class="text-muted-foreground">Estimasi Waktu</span>
+                        <span class="font-medium">{order.urgency_days} Hari Kerja</span>
                     </div>
                 </div>
 
                 <!-- Total -->
-                <div
-                    class="flex justify-between items-center bg-muted/50 p-4 rounded-lg"
-                >
-                    <span class="font-semibold text-lg">Total Tagihan</span>
-                    <span class="font-bold text-2xl text-primary"
-                        >{formatPrice(paymentAmount)}</span
-                    >
-                </div>
-
-                <!-- Payment Methods -->
-                <div class="space-y-3">
-                    <h3 class="font-semibold">Metode Pembayaran</h3>
-
-                    <!-- Loading State -->
-                    <div
-                        id="methods-loading"
-                        class="flex items-center justify-center py-8 text-muted-foreground"
-                    >
-                        <svg
-                            class="animate-spin h-5 w-5 mr-2"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
+                <div class="flex flex-col items-center justify-center bg-muted/50 p-6 rounded-lg text-center space-y-2 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-primary/5"></div>
+                    <span class="font-semibold text-lg relative z-10">Total Transfer</span>
+                    <div class="flex items-center gap-3 relative z-10">
+                        <span class="font-bold text-4xl text-primary">{formatPrice(paymentAmount)}</span>
+                        <button 
+                            class="copy-btn p-2 rounded-full bg-white/80 hover:bg-white text-primary shadow-sm transition-all hover:scale-110 active:scale-95 border border-primary/10"
+                            title="Salin nominal transfer"
+                            data-copy={paymentAmount.toString()}
                         >
-                            <circle
-                                class="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                stroke-width="4"></circle>
-                            <path
-                                class="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                            ></path>
-                        </svg>
-                        Memuat metode pembayaran...
-                    </div>
-
-                    <!-- Error State -->
-                    <div id="methods-error" class="hidden text-center py-6">
-                        <p class="text-destructive mb-3">
-                            Gagal memuat metode pembayaran.
-                        </p>
-                        <button
-                            id="retry-btn"
-                            class="text-sm text-primary hover:underline"
-                        >
-                            Coba lagi
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="copy-icon"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="check-icon hidden text-green-600"><path d="M20 6 9 17l-5-5"/></svg>
                         </button>
                     </div>
+                    <span class="text-sm text-muted-foreground mt-2 bg-primary/10 px-4 py-1.5 rounded-full relative z-10 font-medium">
+                        Mohon transfer <strong class="text-foreground">tepat</strong> hingga 3 digit terakhir.
+                    </span>
+                </div>
 
-                    <!-- Methods Grid -->
-                    <div
-                        id="methods-grid"
-                        class="hidden grid grid-cols-2 sm:grid-cols-3 gap-3"
-                    >
-                        <!-- Populated by JS -->
+                <!-- Bank Accounts -->
+                <div class="space-y-4">
+                    <h3 class="font-semibold border-b pb-2">Pilih Rekening Tujuan</h3>
+                    
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <!-- BRI -->
+                        <div class="border rounded-lg p-4 bg-background hover:border-primary/50 transition-colors relative group">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="text-xs text-muted-foreground font-bold uppercase bg-slate-100 px-2 py-0.5 rounded">BANK BRI</div>
+                            </div>
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="font-mono text-xl font-bold tracking-wider text-slate-800 mb-1 account-number" data-account="546201008338537">5462 0100 8338 537</div>
+                                <button 
+                                    class="copy-btn p-2 rounded-md hover:bg-slate-100 text-muted-foreground transition-colors group-hover:text-primary"
+                                    title="Salin nomor rekening"
+                                    data-copy="546201008338537"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="copy-icon"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="check-icon hidden text-green-600"><path d="M20 6 9 17l-5-5"/></svg>
+                                </button>
+                            </div>
+                            <div class="text-sm text-muted-foreground">a.n Muhammad Siddiq</div>
+                        </div>
+                        
+                        <!-- BSI -->
+                        <div class="border rounded-lg p-4 bg-background hover:border-primary/50 transition-colors relative group">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="text-xs text-muted-foreground font-bold uppercase bg-slate-100 px-2 py-0.5 rounded">BANK BSI</div>
+                            </div>
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="font-mono text-xl font-bold tracking-wider text-slate-800 mb-1 account-number" data-account="429261150">4292 6115 0</div>
+                                <button 
+                                    class="copy-btn p-2 rounded-md hover:bg-slate-100 text-muted-foreground transition-colors group-hover:text-primary"
+                                    title="Salin nomor rekening"
+                                    data-copy="429261150"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="copy-icon"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="check-icon hidden text-green-600"><path d="M20 6 9 17l-5-5"/></svg>
+                                </button>
+                            </div>
+                            <div class="text-sm text-muted-foreground">a.n Muhammad Siddiq</div>
+                        </div>
                     </div>
-
-                    <!-- Pay Button -->
-                    <button
-                        id="pay-btn"
-                        disabled
-                        class="hidden w-full flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground p-4 hover:bg-primary/90 transition-colors font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        Bayar Sekarang
-                    </button>
                 </div>
 
                 <!-- Divider -->
-                <div class="relative">
+                <div class="relative py-2">
                     <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-border/50"></div>
-                    </div>
-                    <div class="relative flex justify-center">
-                        <span class="bg-card px-3 text-xs text-muted-foreground"
-                            >atau</span
-                        >
+                        <div class="w-full border-t border-dashed border-border/60"></div>
                     </div>
                 </div>
 
-                <!-- WhatsApp Fallback -->
-                <a
-                    href={`https://wa.me/6285176777470?text=${encodeURIComponent(`Halo Tarjuman, saya ingin konfirmasi pembayaran untuk Order ID: ${order.id}.`)}`}
-                    target="_blank"
-                    class="flex items-center justify-center gap-2 rounded-lg border border-input bg-background p-4 hover:bg-accent transition-colors"
-                >
-                    <span class="font-medium"
-                        >Konfirmasi via WhatsApp (Manual)</span
+                <!-- Upload Form -->
+                <div class="space-y-4">
+                    <h3 class="font-semibold">Konfirmasi Pembayaran</h3>
+                    <p class="text-sm text-muted-foreground mb-4">
+                        Setelah berhasil transfer, silakan unggah screenshot atau foto resi sebagai bukti pembayaran.
+                    </p>
+
+                    {result?.error?.message && (
+                        <div class="p-4 text-sm font-medium text-destructive bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            Gagal mengunggah bukti: {result.error.message}
+                        </div>
+                    )}
+
+                    <form 
+                        method="POST" 
+                        action={actions.submitTransferProof} 
+                        enctype="multipart/form-data" 
+                        class="space-y-4 bg-slate-50 p-5 rounded-xl border border-slate-100"
                     >
-                </a>
+                        <input type="hidden" name="orderId" value={order.id} />
+                        
+                        <div class="grid w-full items-center gap-2">
+                            <label for="proof" class="text-sm font-bold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-700">
+                                Unggah Bukti Transfer <span class="text-destructive">*</span>
+                            </label>
+                            <input 
+                                id="proof" 
+                                name="proof" 
+                                type="file" 
+                                accept="image/jpeg,image/png,image/webp,.pdf" 
+                                required
+                                class="flex w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm file:border-0 file:bg-primary/10 file:font-semibold file:text-primary file:mr-3 file:py-1 file:px-3 file:rounded-full placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 hover:border-primary/50 transition-colors cursor-pointer text-slate-600" 
+                            />
+                            <p class="text-xs text-muted-foreground">Format JPG, PNG, atau PDF. Maksimal 5MB.</p>
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            class="w-full inline-flex items-center justify-center rounded-lg bg-primary text-primary-foreground py-3.5 px-4 hover:bg-primary/90 transition-colors font-bold shadow mt-2 hover:shadow-md active:scale-[0.98]"
+                        >
+                            Kirim Bukti Pembayaran
+                        </button>
+                    </form>
+                </div>
+
+                <!-- WhatsApp Fallback -->
+                <div class="text-center mt-8">
+                    <span class="text-xs text-muted-foreground bg-card px-2 font-medium uppercase tracking-wider relative -top-3">Atau</span>
+                    <div class="">
+                        <a
+                            href={`https://wa.me/6285176777470?text=${encodeURIComponent(`Halo Tarjuman, saya sudah transfer untuk Order ID: ${order.id}. Ini buktinya:`)}`}
+                            target="_blank"
+                            class="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 hover:bg-slate-50 hover:border-slate-300 transition-colors text-sm shadow-sm"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-600"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                            <span class="font-medium text-slate-700">Konfirmasi via WhatsApp</span>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </Layout>
 
-<script define:vars={{ orderId: id, paymentAmount }}>
-    const methodsLoading = document.getElementById("methods-loading");
-    const methodsError = document.getElementById("methods-error");
-    const methodsGrid = document.getElementById("methods-grid");
-    const payBtn = document.getElementById("pay-btn");
-    const retryBtn = document.getElementById("retry-btn");
-
-    let selectedMethod = null;
-
-    async function loadPaymentMethods() {
-        methodsLoading.classList.remove("hidden");
-        methodsError.classList.add("hidden");
-        methodsGrid.classList.add("hidden");
-        payBtn.classList.add("hidden");
-
-        try {
-            const res = await fetch(
-                `/api/duitku/payment-methods?amount=${paymentAmount}`,
-            );
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.error || `API error (${res.status})`);
+<script>
+    // Copy handling
+    const copyBtns = document.querySelectorAll('.copy-btn');
+    
+    copyBtns.forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const textToCopy = (btn as HTMLElement).dataset.copy || '';
+            const copyIcon = btn.querySelector('.copy-icon');
+            const checkIcon = btn.querySelector('.check-icon');
+            
+            try {
+                await navigator.clipboard.writeText(textToCopy);
+                
+                // Visual feedback
+                copyIcon?.classList.add('hidden');
+                checkIcon?.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    copyIcon?.classList.remove('hidden');
+                    checkIcon?.classList.add('hidden');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy: ', err);
             }
+        });
+    });
 
-            const data = await res.json();
-            const methods = data.methods || [];
+    // Form submission feedback
+    const form = document.querySelector('form');
+    const submitBtn = form?.querySelector('button[type="submit"]');
 
-            if (methods.length === 0) {
-                throw new Error("No payment methods available");
-            }
-
-            // Render methods
-            methodsGrid.innerHTML = "";
-            methods.forEach((m) => {
-                const card = document.createElement("button");
-                card.type = "button";
-                card.dataset.method = m.paymentMethod;
-                card.className =
-                    "flex flex-col items-center gap-2 p-3 rounded-lg border border-border bg-background hover:border-primary/50 hover:bg-primary/5 transition-all text-center cursor-pointer";
-
-                const fee = parseInt(m.totalFee || "0");
-                const feeText =
-                    fee > 0
-                        ? `+${new Intl.NumberFormat("id-ID").format(fee)}`
-                        : "Gratis";
-
-                card.innerHTML = `
-                    <img src="${m.paymentImage}" alt="${m.paymentName}" class="h-8 object-contain" loading="lazy" />
-                    <span class="text-xs font-medium leading-tight">${m.paymentName}</span>
-                    <span class="text-[10px] text-muted-foreground">Fee: ${feeText}</span>
-                `;
-
-                card.addEventListener("click", () => {
-                    // Deselect all
-                    methodsGrid.querySelectorAll("button").forEach((btn) => {
-                        btn.classList.remove(
-                            "border-primary",
-                            "bg-primary/10",
-                            "ring-2",
-                            "ring-primary/20",
-                        );
-                        btn.classList.add("border-border", "bg-background");
-                    });
-                    // Select this one
-                    card.classList.remove("border-border", "bg-background");
-                    card.classList.add(
-                        "border-primary",
-                        "bg-primary/10",
-                        "ring-2",
-                        "ring-primary/20",
-                    );
-                    selectedMethod = m.paymentMethod;
-                    payBtn.disabled = false;
-                });
-
-                methodsGrid.appendChild(card);
-            });
-
-            methodsLoading.classList.add("hidden");
-            methodsGrid.classList.remove("hidden");
-            payBtn.classList.remove("hidden");
-        } catch (err) {
-            console.error("Failed to load payment methods:", err);
-            methodsLoading.classList.add("hidden");
-            methodsError.classList.remove("hidden");
-        }
-    }
-
-    // Pay button click handler
-    payBtn?.addEventListener("click", async () => {
-        if (!selectedMethod) return;
-
-        const originalText = payBtn.innerHTML;
-        payBtn.innerHTML = `
-            <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    form?.addEventListener('submit', () => {
+        if (!submitBtn) return;
+        
+        submitBtn.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
             </svg>
-            Memproses pembayaran...
+            Mengunggah bukti...
         `;
-        payBtn.disabled = true;
-
-        try {
-            const res = await fetch(`/api/orders/${orderId}/pay`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ paymentMethod: selectedMethod }),
-            });
-
-            const data = await res.json();
-
-            if (res.ok && data.paymentUrl) {
-                // Redirect to Duitku payment page
-                window.location.href = data.paymentUrl;
-            } else {
-                alert(data.error || "Pembayaran gagal. Silakan coba lagi.");
-                payBtn.innerHTML = originalText;
-                payBtn.disabled = false;
-            }
-        } catch (e) {
-            console.error(e);
-            alert("Terjadi kesalahan. Silakan coba lagi.");
-            payBtn.innerHTML = originalText;
-            payBtn.disabled = false;
-        }
+        submitBtn.classList.add('opacity-80', 'cursor-not-allowed');
+        
+        // Disable button after short delay to prevent double submission
+        setTimeout(() => {
+            (submitBtn as HTMLButtonElement).disabled = true;
+        }, 50);
     });
-
-    // Retry button
-    retryBtn?.addEventListener("click", loadPaymentMethods);
-
-    // Initial load
-    loadPaymentMethods();
 </script>

@@ -29,7 +29,14 @@ function formatPrice(price: number) {
     }).format(price);
 }
 
-function getStatusBadge(status: string) {
+function getStatusBadge(order: any) {
+    const status = order.status;
+    const paymentStatus = order.payment_status;
+
+    if (status === "payment_pending" && paymentStatus === "pending") {
+        return "bg-amber-100 text-amber-800 border-amber-200";
+    }
+
     switch (status) {
         case "payment_pending":
             return "bg-yellow-100 text-yellow-800 border-yellow-200";
@@ -45,7 +52,14 @@ function getStatusBadge(status: string) {
     }
 }
 
-function getStatusLabel(status: string) {
+function getStatusLabel(order: any) {
+    const status = order.status;
+    const paymentStatus = order.payment_status;
+
+    if (status === "payment_pending" && paymentStatus === "pending") {
+        return "Menunggu Verifikasi";
+    }
+
     const labels: Record<string, string> = {
         payment_pending: "Menunggu Pembayaran",
         paid: "Dibayar",
@@ -123,9 +137,9 @@ function getStatusLabel(status: string) {
                                 <!-- Header: Status & ID -->
                                 <div class="flex justify-between items-start mb-4">
                                      <span
-                                        class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${getStatusBadge(order.status || "")}`}
+                                        class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${getStatusBadge(order)}`}
                                     >
-                                        {getStatusLabel(order.status || "")}
+                                        {getStatusLabel(order)}
                                     </span>
                                     <span class="text-xs text-muted-foreground font-mono">#{order.id.slice(0, 8)}</span>
                                 </div>
@@ -164,7 +178,7 @@ function getStatusLabel(status: string) {
 
                                 <!-- Footer: Action -->
                                 <div class="pt-6 mt-2 border-t border-border/50">
-                                    {order.status === "payment_pending" ? (
+                                    {(order.status === "payment_pending" && order.payment_status !== "pending") ? (
                                         <a
                                             href={`/payment/${order.id}`}
                                             class="w-full inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"

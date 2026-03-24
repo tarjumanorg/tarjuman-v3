@@ -1,6 +1,7 @@
 ---
 import AdminLayout from "../../../layouts/AdminLayout.astro";
 import { createClient } from "../../../lib/supabase";
+import { actions } from "astro:actions";
 
 const { id } = Astro.params;
 const supabase = createClient(Astro);
@@ -209,6 +210,68 @@ function formatPrice(price: number) {
                 )
             }
 
+            <!-- Payment Verification (Manual Transfer) -->
+            {
+                order.payment_status === "pending" && (
+                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-200">
+                        <h3 class="font-bold text-lg text-blue-900 mb-4">
+                            Verifikasi Pembayaran
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="p-3 bg-white rounded border border-blue-100 text-sm">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-slate-500">Nominal Transfer:</span>
+                                    <span class="font-bold text-slate-800">{formatPrice(order.final_price || 0)}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Metode:</span>
+                                    <span class="font-medium text-slate-800">{order.payment_method === 'bank_transfer' ? 'Transfer Bank' : order.payment_method}</span>
+                                </div>
+                            </div>
+                            
+                            {order.transfer_proof_url ? (
+                                <div>
+                                    <p class="text-sm font-medium mb-2 text-blue-900">Bukti Transfer:</p>
+                                    <a 
+                                        href={`https://uanunxlglzahnpyytrpa.supabase.co/storage/v1/object/public/order-files/${order.transfer_proof_url}`} 
+                                        target="_blank"
+                                        class="block border border-blue-200 rounded overflow-hidden hover:opacity-90 transition-opacity bg-white"
+                                    >
+                                        <img 
+                                            src={`https://uanunxlglzahnpyytrpa.supabase.co/storage/v1/object/public/order-files/${order.transfer_proof_url}`} 
+                                            alt="Bukti Transfer" 
+                                            class="w-full h-auto max-h-48 object-cover"
+                                            onerror={"this.onerror=null; this.parentElement.innerHTML='<div class=\"p-4 text-center text-sm text-blue-600\">Lihat Dokumen PDF / Gambar</div>';"}
+                                        />
+                                    </a>
+                                </div>
+                            ) : (
+                                <div class="p-4 bg-white rounded border border-amber-200 text-amber-700 text-sm italic text-center">
+                                    User belum mengunggah bukti transfer.
+                                </div>
+                            )}
+
+                            <form
+                                method="POST"
+                                action={actions.confirmPayment}
+                                class="pt-2"
+                            >
+                                <input type="hidden" name="orderId" value={order.id} />
+                                <button
+                                    type="submit"
+                                    class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                                >
+                                    Konfirmasi & Mulai Kerjakan
+                                </button>
+                                <p class="text-xs text-blue-700 mt-2 text-center opacity-80">
+                                    Ini akan merubah status menjadi "Processing" dan mengirim email.
+                                </p>
+                            </form>
+                        </div>
+                    </div>
+                )
+            }
+
             <!-- Status Actions -->
             <div
                 class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"
@@ -218,9 +281,9 @@ function formatPrice(price: number) {
                 </h3>
 
                 {
-                    order.status === "payment_pending" && (
+                    (order.status === "payment_pending" || order.payment_status === "pending") && (
                         <div class="text-sm text-slate-500">
-                            Menunggu pembayaran user. Anda bisa mengubah harga
+                            Menunggu pembayaran dan verifikasi user. Anda bisa mengubah harga
                             di atas jika perlu.
                         </div>
                     )
@@ -228,7 +291,7 @@ function formatPrice(price: number) {
 
                 {
                     (order.status === "processing" ||
-                        order.status === "paid") && (
+                        order.payment_status === "paid") && (
                         <div class="space-y-4">
                             <div class="p-3 bg-blue-50 text-blue-800 rounded text-sm">
                                 <strong>Status:</strong> Sedang diterjemahkan.
