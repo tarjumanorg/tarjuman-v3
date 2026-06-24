@@ -1,8 +1,9 @@
 ---
 import Layout from "../../../layouts/Layout.astro";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "../../../lib/supabase";
 import { confirmAndUpdateOrder } from "../../../lib/mayar";
-import { MAYAR_API_KEY, MAYAR_API_URL } from "astro:env/server";
+import { MAYAR_API_KEY, MAYAR_API_URL, SUPABASE_SERVICE_ROLE_KEY } from "astro:env/server";
 
 const { id } = Astro.params;
 const supabase = createClient(Astro);
@@ -34,16 +35,25 @@ if (order.user_id !== user.id) return Astro.redirect("/404");
 // fall back to the originally-fetched order on any failure.
 let confirmedOrder = order;
 if (MAYAR_API_KEY) {
-    try {
-        const result = await confirmAndUpdateOrder(
-            supabase,
-            { apiKey: MAYAR_API_KEY, baseUrl: MAYAR_API_URL },
-            order.id,
-        );
-        confirmedOrder = result ?? order;
-    } catch (err) {
-        console.error("Error confirming order against Mayar:", err);
+    if (!SUPABASE_SERVICE_ROLE_KEY) {
+        console.error("SUPABASE_SERVICE_ROLE_KEY is not configured");
         confirmedOrder = order;
+    } else {
+        try {
+            const adminSupabase = createSupabaseClient(
+                import.meta.env.PUBLIC_SUPABASE_URL,
+                SUPABASE_SERVICE_ROLE_KEY,
+            );
+            const result = await confirmAndUpdateOrder(
+                adminSupabase,
+                { apiKey: MAYAR_API_KEY, baseUrl: MAYAR_API_URL },
+                order.id,
+            );
+            confirmedOrder = result ?? order;
+        } catch (err) {
+            console.error("Error confirming order against Mayar:", err);
+            confirmedOrder = order;
+        }
     }
 }
 

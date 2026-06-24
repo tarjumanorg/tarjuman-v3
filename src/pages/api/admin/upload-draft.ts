@@ -1,6 +1,8 @@
 
 import type { APIRoute } from 'astro';
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "../../../lib/supabase";
+import { SUPABASE_SERVICE_ROLE_KEY } from "astro:env/server";
 
 export const POST: APIRoute = async (context) => {
     const { request, redirect } = context;
@@ -35,8 +37,16 @@ export const POST: APIRoute = async (context) => {
 
     if (dbError) return new Response(dbError.message, { status: 500 });
 
+    if (!SUPABASE_SERVICE_ROLE_KEY) {
+        return new Response("Server configuration error", { status: 500 });
+    }
+    const adminSupabase = createSupabaseClient(
+        import.meta.env.PUBLIC_SUPABASE_URL,
+        SUPABASE_SERVICE_ROLE_KEY,
+    );
+
     // Update Order Status to 'review'
-    const { data: updatedOrder, error: updateError } = await supabase
+    const { data: updatedOrder, error: updateError } = await adminSupabase
         .from("orders")
         .update({ status: "review" })
         .eq("id", orderId)

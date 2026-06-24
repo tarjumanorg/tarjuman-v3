@@ -1,8 +1,9 @@
 
 import type { APIRoute } from "astro";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "../../../../lib/supabase";
 import { createOrderInvoice } from "../../../../lib/mayar";
-import { SITE_URL, MAYAR_API_KEY, MAYAR_API_URL } from "astro:env/server";
+import { SITE_URL, MAYAR_API_KEY, MAYAR_API_URL, SUPABASE_SERVICE_ROLE_KEY } from "astro:env/server";
 
 export const prerender = false;
 
@@ -76,6 +77,18 @@ export const POST: APIRoute = async ({ request, params, cookies, redirect }) => 
         });
     }
 
+    if (!SUPABASE_SERVICE_ROLE_KEY) {
+        console.error("SUPABASE_SERVICE_ROLE_KEY is not configured");
+        return new Response(JSON.stringify({ error: "Payment request failed" }), {
+            status: 502,
+            headers: { "Content-Type": "application/json" },
+        });
+    }
+    const adminSupabase = createSupabaseClient(
+        import.meta.env.PUBLIC_SUPABASE_URL,
+        SUPABASE_SERVICE_ROLE_KEY,
+    );
+
     try {
         const profile = order.profiles as any;
         const customerName = profile?.full_name || user.email?.split('@')[0] || 'Customer';
@@ -83,7 +96,7 @@ export const POST: APIRoute = async ({ request, params, cookies, redirect }) => 
         const customerPhone = profile?.whatsapp_number || '';
 
         const result = await createOrderInvoice(
-            supabase,
+            adminSupabase,
             { apiKey: MAYAR_API_KEY, baseUrl: MAYAR_API_URL },
             {
                 orderId: id,
