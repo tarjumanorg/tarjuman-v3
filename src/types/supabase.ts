@@ -90,6 +90,9 @@ export type Database = {
           final_price: number | null
           hard_copy_address: string | null
           id: string
+          mayar_invoice_id: string | null
+          mayar_payment_url: string | null
+          mayar_transaction_id: string | null
           original_filename: string | null
           original_price: number | null
           page_count_estimated: number | null
@@ -115,6 +118,9 @@ export type Database = {
           final_price?: number | null
           hard_copy_address?: string | null
           id?: string
+          mayar_invoice_id?: string | null
+          mayar_payment_url?: string | null
+          mayar_transaction_id?: string | null
           original_filename?: string | null
           original_price?: number | null
           page_count_estimated?: number | null
@@ -140,6 +146,9 @@ export type Database = {
           final_price?: number | null
           hard_copy_address?: string | null
           id?: string
+          mayar_invoice_id?: string | null
+          mayar_payment_url?: string | null
+          mayar_transaction_id?: string | null
           original_filename?: string | null
           original_price?: number | null
           page_count_estimated?: number | null
@@ -416,4 +425,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
