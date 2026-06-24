@@ -1,6 +1,8 @@
 ---
 import Layout from "../../../layouts/Layout.astro";
 import { createClient } from "../../../lib/supabase";
+import { confirmAndUpdateOrder } from "../../../lib/mayar";
+import { MAYAR_API_KEY, MAYAR_API_URL } from "astro:env/server";
 
 const { id } = Astro.params;
 const supabase = createClient(Astro);
@@ -27,18 +29,39 @@ const { data: order, error } = await supabase
 if (error || !order) return Astro.redirect("/404");
 if (order.user_id !== user.id) return Astro.redirect("/404");
 
+// Re-confirm payment status directly against Mayar (the source of truth)
+// in case the webhook hasn't fired yet. Never let this throw or redirect —
+// fall back to the originally-fetched order on any failure.
+let confirmedOrder = order;
+if (MAYAR_API_KEY) {
+    try {
+        const result = await confirmAndUpdateOrder(
+            supabase,
+            { apiKey: MAYAR_API_KEY, baseUrl: MAYAR_API_URL },
+            order.id,
+        );
+        confirmedOrder = result ?? order;
+    } catch (err) {
+        console.error("Error confirming order against Mayar:", err);
+        confirmedOrder = order;
+    }
+}
+
 // Determine payment status display
-const isPaid = order.payment_status === "paid" || order.status === "processing";
+const isPaid =
+    confirmedOrder.payment_status === "paid" ||
+    confirmedOrder.status === "processing";
 const isPending =
     !isPaid &&
-    (order.payment_status === "pending" ||
-        order.payment_status === "pending_verification");
+    (confirmedOrder.payment_status === "pending" ||
+        confirmedOrder.payment_status === "pending_verification");
 const isFailed =
-    order.payment_status === "failed" || order.payment_status === "cancelled";
+    confirmedOrder.payment_status === "failed" ||
+    confirmedOrder.payment_status === "cancelled";
 
 // Calculate ETA
-const createdDate = new Date(order.created_at);
-const urgencyDays = order.urgency_days || 3;
+const createdDate = new Date(confirmedOrder.created_at);
+const urgencyDays = confirmedOrder.urgency_days || 3;
 const etaDate = new Date(createdDate);
 etaDate.setDate(etaDate.getDate() + urgencyDays);
 
@@ -204,11 +227,11 @@ const statusConfig = isPaid
                     )
                 }
                 {
-                    order.duitku_reference && (
+                    confirmedOrder.mayar_transaction_id && (
                         <div class="flex justify-between">
                             <span class="text-muted-foreground">Referensi</span>
                             <span class="font-mono text-xs">
-                                {order.duitku_reference}
+                                {confirmedOrder.mayar_transaction_id}
                             </span>
                         </div>
                     )
