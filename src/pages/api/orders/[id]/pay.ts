@@ -69,10 +69,15 @@ export const POST: APIRoute = async ({ request, params, cookies, redirect }) => 
     }
 
     // 3. Request invoice from Mayar
+    // Note: Cloudflare intercepts and replaces the response body for 500/502/504
+    // (and 520-526) with its own HTML error page, even when the Worker/Pages
+    // Function explicitly set a JSON body — confirmed empirically in production.
+    // Every error response here must stay outside that range so the client's
+    // `response.json()` doesn't throw on Cloudflare's HTML instead of our JSON.
     if (!MAYAR_API_KEY) {
         console.error("MAYAR_API_KEY is not configured");
         return new Response(JSON.stringify({ error: "Payment request failed" }), {
-            status: 502,
+            status: 400,
             headers: { "Content-Type": "application/json" },
         });
     }
@@ -80,7 +85,7 @@ export const POST: APIRoute = async ({ request, params, cookies, redirect }) => 
     if (!SUPABASE_SERVICE_ROLE_KEY) {
         console.error("SUPABASE_SERVICE_ROLE_KEY is not configured");
         return new Response(JSON.stringify({ error: "Payment request failed" }), {
-            status: 502,
+            status: 400,
             headers: { "Content-Type": "application/json" },
         });
     }
@@ -111,7 +116,7 @@ export const POST: APIRoute = async ({ request, params, cookies, redirect }) => 
 
         if (!result) {
             return new Response(JSON.stringify({ error: "Payment request failed" }), {
-                status: 502,
+                status: 400,
                 headers: { "Content-Type": "application/json" },
             });
         }
@@ -125,7 +130,7 @@ export const POST: APIRoute = async ({ request, params, cookies, redirect }) => 
     } catch (err: any) {
         console.error("Mayar invoice request failed:", err);
         return new Response(JSON.stringify({ error: err.message || "Payment request failed" }), {
-            status: 500,
+            status: 400,
             headers: { "Content-Type": "application/json" },
         });
     }

@@ -30,11 +30,16 @@ export const POST: APIRoute = async ({ request }) => {
         });
     }
 
+    // Cloudflare intercepts and replaces the response body for 500/502/504 (and
+    // 520-526) with its own HTML error page, even when the Function explicitly
+    // set a JSON body — confirmed empirically in production via /api/orders/[id]/pay.
+    // The cron worker calling this endpoint always does response.json(), so every
+    // error response here must stay outside that range.
     try {
         if (!SUPABASE_SERVICE_ROLE_KEY) {
             console.error('[Mayar Reconcile] SUPABASE_SERVICE_ROLE_KEY is not configured');
             return new Response(JSON.stringify({ error: 'Server misconfigured' }), {
-                status: 500,
+                status: 400,
                 headers: { 'Content-Type': 'application/json' },
             });
         }
@@ -46,7 +51,7 @@ export const POST: APIRoute = async ({ request }) => {
         if (!MAYAR_API_KEY) {
             console.error('[Mayar Reconcile] MAYAR_API_KEY is not configured');
             return new Response(JSON.stringify({ error: 'Server misconfigured' }), {
-                status: 500,
+                status: 400,
                 headers: { 'Content-Type': 'application/json' },
             });
         }
@@ -64,7 +69,7 @@ export const POST: APIRoute = async ({ request }) => {
     } catch (err) {
         console.error('[Mayar Reconcile] Error:', err);
         return new Response(JSON.stringify({ error: 'Internal error' }), {
-            status: 500,
+            status: 400,
             headers: { 'Content-Type': 'application/json' },
         });
     }
