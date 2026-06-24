@@ -19,5 +19,8 @@
                 "src/utils/*"
             ]
         }
-    }
+    },
+    "exclude": [
+        "workers"
+    ]
 }
