@@ -12,6 +12,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     const isMaintenancePath = url.pathname === "/maintenance";
     const isLoginPath = url.pathname === "/login";
     const isAdminPath = url.pathname.startsWith("/admin");
+    const isAdminApiPath = url.pathname.startsWith("/api/admin");
     const isAuthApi = url.pathname.startsWith("/api/auth");
 
     // create supabase client
@@ -46,7 +47,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     locals.user = user;
 
     // Maintenance Redirection
-    if (isMaintenanceMode && !isAsset && !isMaintenancePath && !isLoginPath && !isAdminPath && !isAuthApi) {
+    if (isMaintenanceMode && !isAsset && !isMaintenancePath && !isLoginPath && !isAdminPath && !isAdminApiPath && !isAuthApi) {
         // Allow admins to bypass maintenance
         let isAdmin = false;
         if (user) {
@@ -64,8 +65,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
 
     // Protect /admin routes
-    if (url.pathname.startsWith("/admin")) {
+    if (isAdminPath || isAdminApiPath) {
         if (!user) {
+            if (isAdminApiPath) {
+                return new Response(JSON.stringify({ error: "Unauthorized" }), {
+                    status: 401,
+                    headers: { "Content-Type": "application/json" },
+                });
+            }
             return context.redirect("/login");
         }
 
@@ -77,6 +84,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
             .single();
 
         if (profile?.role !== "admin") {
+            if (isAdminApiPath) {
+                return new Response(JSON.stringify({ error: "Forbidden" }), {
+                    status: 403,
+                    headers: { "Content-Type": "application/json" },
+                });
+            }
             // Redirect non-admins to home or dashboard
             return context.redirect("/dashboard");
         }
