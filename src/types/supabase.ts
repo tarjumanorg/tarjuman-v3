@@ -85,11 +85,12 @@ export type Database = {
         Row: {
           created_at: string
           currency: string | null
-          duitku_payment_url: string | null
-          duitku_reference: string | null
           final_price: number | null
           hard_copy_address: string | null
           id: string
+          mayar_invoice_id: string | null
+          mayar_payment_url: string | null
+          mayar_transaction_id: string | null
           original_filename: string | null
           original_price: number | null
           page_count_estimated: number | null
@@ -100,9 +101,6 @@ export type Database = {
           status: string | null
           storage_path_final: string | null
           storage_path_source: string | null
-          transfer_notes: string | null
-          transfer_proof_url: string | null
-          unique_amount: number | null
           updated_at: string
           urgency_days: number | null
           user_id: string
@@ -110,11 +108,12 @@ export type Database = {
         Insert: {
           created_at?: string
           currency?: string | null
-          duitku_payment_url?: string | null
-          duitku_reference?: string | null
           final_price?: number | null
           hard_copy_address?: string | null
           id?: string
+          mayar_invoice_id?: string | null
+          mayar_payment_url?: string | null
+          mayar_transaction_id?: string | null
           original_filename?: string | null
           original_price?: number | null
           page_count_estimated?: number | null
@@ -125,9 +124,6 @@ export type Database = {
           status?: string | null
           storage_path_final?: string | null
           storage_path_source?: string | null
-          transfer_notes?: string | null
-          transfer_proof_url?: string | null
-          unique_amount?: number | null
           updated_at?: string
           urgency_days?: number | null
           user_id: string
@@ -135,11 +131,12 @@ export type Database = {
         Update: {
           created_at?: string
           currency?: string | null
-          duitku_payment_url?: string | null
-          duitku_reference?: string | null
           final_price?: number | null
           hard_copy_address?: string | null
           id?: string
+          mayar_invoice_id?: string | null
+          mayar_payment_url?: string | null
+          mayar_transaction_id?: string | null
           original_filename?: string | null
           original_price?: number | null
           page_count_estimated?: number | null
@@ -150,9 +147,6 @@ export type Database = {
           status?: string | null
           storage_path_final?: string | null
           storage_path_source?: string | null
-          transfer_notes?: string | null
-          transfer_proof_url?: string | null
-          unique_amount?: number | null
           updated_at?: string
           urgency_days?: number | null
           user_id?: string
@@ -416,4 +410,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-

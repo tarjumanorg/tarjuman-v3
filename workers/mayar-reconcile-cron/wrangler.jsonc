@@ -1,0 +1,14 @@
+{
+  "name": "tarjuman-mayar-reconcile-cron",
+  "main": "index.ts",
+  "compatibility_date": "2026-02-07",
+  "triggers": {
+    "crons": ["*/10 * * * *"]
+  },
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "RECONCILE_URL": "https://tarjuman.org/api/mayar/reconcile"
+  }
+}

@@ -10,8 +10,7 @@ const {
 } = await supabase.auth.getUser();
 if (!user) return Astro.redirect("/login");
 
-// TODO: Checking roles will be implemented later. For now assuming logged in user is admin.
-// In real app, we check public.profiles.role === 'admin'
+// Role enforcement happens in src/middleware.ts for both /admin pages and /api/admin routes.
 
 // Fetch All Orders
 const { data: orders, error } = await supabase

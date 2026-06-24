@@ -15,7 +15,7 @@ export default defineConfig({
     plugins: [tailwindcss()]
   },
 
-  // Allow external POST requests (e.g. from Duitku callback)
+  // Allow external POST requests (e.g. from the Mayar webhook)
   security: {
     checkOrigin: false
   },
@@ -29,9 +29,9 @@ export default defineConfig({
   env: {
     schema: {
       SUPABASE_SERVICE_ROLE_KEY: envField.string({ context: "server", access: "secret", optional: true }),
-      DUITKU_MERCHANT_CODE: envField.string({ context: "server", access: "secret", optional: true }),
-      DUITKU_API_KEY: envField.string({ context: "server", access: "secret", optional: true }),
-      DUITKU_BASE_URL: envField.string({ context: "server", access: "secret", default: "https://sandbox.duitku.com" }),
+      MAYAR_API_KEY: envField.string({ context: "server", access: "secret", optional: true }),
+      MAYAR_API_URL: envField.string({ context: "server", access: "secret", default: "https://api.mayar.club" }),
+      MAYAR_WEBHOOK_TOKEN: envField.string({ context: "server", access: "secret", optional: true }),
       SITE_URL: envField.string({ context: "server", access: "secret", default: "https://tarjuman.org" }),
       SENDPULSE_API_ID: envField.string({ context: "server", access: "secret", optional: true }),
       SENDPULSE_API_SECRET: envField.string({ context: "server", access: "secret", optional: true }),
