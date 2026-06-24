@@ -1,7 +1,8 @@
 
 import type { APIRoute } from "astro";
 import { createClient } from "../../../../lib/supabase";
-import { requestTransaction } from "../../../../lib/duitku";
+import { createOrderInvoice } from "../../../../lib/mayar";
+import { SITE_URL, MAYAR_API_KEY, MAYAR_API_URL } from "astro:env/server";
 
 export const prerender = false;
 
@@ -28,25 +29,7 @@ export const POST: APIRoute = async ({ request, params, cookies, redirect }) => 
         });
     }
 
-    // 2. Parse body for payment method
-    let body: { paymentMethod: string };
-    try {
-        body = await request.json();
-    } catch {
-        return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-        });
-    }
-
-    if (!body.paymentMethod) {
-        return new Response(JSON.stringify({ error: "paymentMethod is required" }), {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-        });
-    }
-
-    // 3. Fetch order with user profile
+    // 2. Fetch order with user profile
     const { data: order, error } = await supabase
         .from("orders")
         .select("*, profiles!fk_orders_profiles(full_name, email, whatsapp_number)")
@@ -84,49 +67,50 @@ export const POST: APIRoute = async ({ request, params, cookies, redirect }) => 
         });
     }
 
-    // 4. Request transaction from Duitku
+    // 3. Request invoice from Mayar
+    if (!MAYAR_API_KEY) {
+        console.error("MAYAR_API_KEY is not configured");
+        return new Response(JSON.stringify({ error: "Payment request failed" }), {
+            status: 502,
+            headers: { "Content-Type": "application/json" },
+        });
+    }
+
     try {
         const profile = order.profiles as any;
         const customerName = profile?.full_name || user.email?.split('@')[0] || 'Customer';
         const customerEmail = profile?.email || user.email || '';
         const customerPhone = profile?.whatsapp_number || '';
 
-        const result = await requestTransaction({
-            orderId: id,
-            paymentAmount,
-            paymentMethod: body.paymentMethod,
-            productDetails: `Jasa Terjemah Tersumpah - Tarjuman (Order #${id.slice(0, 8)})`,
-            email: customerEmail,
-            customerName,
-            phoneNumber: customerPhone,
-        });
+        const result = await createOrderInvoice(
+            supabase,
+            { apiKey: MAYAR_API_KEY, baseUrl: MAYAR_API_URL },
+            {
+                orderId: id,
+                amount: paymentAmount,
+                name: customerName,
+                email: customerEmail,
+                mobile: customerPhone,
+                description: `Jasa Terjemah Tersumpah - Tarjuman (Order #${id.slice(0, 8)})`,
+                redirectUrl: `${SITE_URL}/payment/success/${id}`,
+            }
+        );
 
-        // 5. Store Duitku reference on the order
-        const { error: updateError } = await supabase
-            .from("orders")
-            .update({
-                duitku_reference: result.reference,
-                duitku_payment_url: result.paymentUrl,
-                payment_method: body.paymentMethod,
-                payment_status: 'pending',
-            })
-            .eq("id", id);
-
-        if (updateError) {
-            console.error("Failed to update order with Duitku reference:", updateError);
+        if (!result) {
+            return new Response(JSON.stringify({ error: "Payment request failed" }), {
+                status: 502,
+                headers: { "Content-Type": "application/json" },
+            });
         }
 
         return new Response(JSON.stringify({
-            paymentUrl: result.paymentUrl,
-            reference: result.reference,
-            vaNumber: result.vaNumber || null,
-            qrString: result.qrString || null,
+            paymentUrl: result.link,
         }), {
             status: 200,
             headers: { "Content-Type": "application/json" },
         });
     } catch (err: any) {
-        console.error("Duitku transaction request failed:", err);
+        console.error("Mayar invoice request failed:", err);
         return new Response(JSON.stringify({ error: err.message || "Payment request failed" }), {
             status: 500,
             headers: { "Content-Type": "application/json" },
