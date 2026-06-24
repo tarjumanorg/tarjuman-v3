@@ -5,70 +5,7 @@ import { sendEmail } from '../lib/sendpulse';
 import { SUPABASE_SERVICE_ROLE_KEY } from 'astro:env/server';
 
 export const server = {
-    // 1. Submit Transfer Proof
-    submitTransferProof: defineAction({
-        accept: 'form',
-        input: z.object({
-            orderId: z.string().uuid(),
-            proof: z.instanceof(File),
-        }),
-        handler: async ({ orderId, proof }, context) => {
-            const supabase = createClient(context as any);
-
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("Unauthorized");
-
-            const { data: order, error: orderError } = await supabase
-                .from("orders")
-                .select("*")
-                .eq("id", orderId)
-                .single();
-
-            if (orderError || !order) throw new Error("Order not found");
-            if (order.user_id !== user.id) throw new Error("Unauthorized");
-            if (order.payment_status === 'paid') throw new Error("Order is already paid");
-
-            // Max size 5MB validation
-            if (proof.size > 5 * 1024 * 1024) {
-                throw new Error("File size exceeds 5MB limit");
-            }
-
-            const fileExt = proof.name.split('.').pop() || 'png';
-            const fileName = `transfer_proof_${Date.now()}.${fileExt}`;
-            const filePath = `${orderId}/${fileName}`;
-
-            // Use admin client to bypass RLS for storage uploads
-            if (!SUPABASE_SERVICE_ROLE_KEY) {
-                throw new Error("Server configuration error: SUPABASE_SERVICE_ROLE_KEY missing");
-            }
-            const { createClient: createSupabaseClient } = await import('@supabase/supabase-js');
-            const adminSupabase = createSupabaseClient(
-                import.meta.env.PUBLIC_SUPABASE_URL,
-                SUPABASE_SERVICE_ROLE_KEY
-            );
-
-            const { error: uploadError } = await adminSupabase.storage
-                .from('order-files')
-                .upload(filePath, proof);
-
-            if (uploadError) throw new Error("Failed to upload proof: " + uploadError.message);
-
-            const { error: updateError } = await adminSupabase
-                .from("orders")
-                .update({
-                    transfer_proof_url: filePath,
-                    payment_method: 'bank_transfer',
-                    payment_status: 'pending'
-                })
-                .eq("id", orderId);
-
-            if (updateError) throw new Error("Failed to update order");
-
-            return { success: true };
-        }
-    }),
-
-    // 2. Confirm Payment (Admin Action)
+    // Confirm Payment (Admin Action)
     confirmPayment: defineAction({
         accept: 'form',
         input: z.object({
