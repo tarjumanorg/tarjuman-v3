@@ -9,7 +9,21 @@ import cloudflare from '@astrojs/cloudflare';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://tarjuman.org',
-  integrations: [svelte(), sitemap()],
+  integrations: [
+    svelte(),
+    sitemap({
+      filter: (page) =>
+        !['/admin/', '/dashboard/', '/login/', '/checkout/process/', '/maintenance/'].some(
+          (path) => page.includes(path)
+        ),
+    }),
+  ],
+
+  redirects: {
+    '/order': '/',
+    '/contact': '/',
+    '/terms-of-service': '/terms',
+  },
 
   vite: {
     plugins: [tailwindcss()]
