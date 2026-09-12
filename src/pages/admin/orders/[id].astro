@@ -82,7 +82,7 @@ function formatPrice(price: number) {
                 <div class="space-y-3">
                     {
                         order.order_files
-                            .filter((f: any) => f.file_type === "original")
+                            .filter((f: any) => f.file_type === "source")
                             .map((file: any) => (
                                 <div class="flex items-center justify-between p-3 rounded-lg border border-slate-200">
                                     <div class="flex items-center gap-3">

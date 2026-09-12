@@ -68,6 +68,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
         order_id: orderData.id,
         file_path: f.path, // Path in Supabase Storage
         page_count: f.pageCount,
+        file_type: "source",
     }));
 
     const { error: filesError } = await supabase
