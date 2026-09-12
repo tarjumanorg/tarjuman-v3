@@ -106,7 +106,7 @@ function formatPrice(price: number) {
                                         </div>
                                     </div>
                                     <a
-                                        href={`/api/files/download?path=${file.file_path}`}
+                                        href={`/api/admin/files/download?path=${encodeURIComponent(file.file_path)}`}
                                         target="_blank"
                                         class="file-download-link text-blue-600 hover:text-blue-800 text-sm font-medium"
                                     >
