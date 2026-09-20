@@ -2,7 +2,7 @@
 import type { APIRoute } from "astro";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "../../../../lib/supabase";
-import { createOrderInvoice } from "../../../../lib/mayar";
+import { createOrderInvoice, confirmAndUpdateOrder } from "../../../../lib/mayar";
 import { SITE_URL, MAYAR_API_KEY, MAYAR_API_URL, SUPABASE_SERVICE_ROLE_KEY } from "astro:env/server";
 
 export const prerender = false;
@@ -95,6 +95,19 @@ export const POST: APIRoute = async ({ request, params, cookies, redirect }) => 
     );
 
     try {
+        // If the stored invoice was already paid, settle the order instead of issuing a new invoice.
+        const confirmed = await confirmAndUpdateOrder(
+            adminSupabase,
+            { apiKey: MAYAR_API_KEY, baseUrl: MAYAR_API_URL },
+            id,
+        );
+        if (confirmed?.payment_status === 'paid') {
+            return new Response(JSON.stringify({ error: "Order is already paid" }), {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+            });
+        }
+
         const profile = order.profiles as any;
         const customerName = profile?.full_name || user.email?.split('@')[0] || 'Customer';
         const customerEmail = profile?.email || user.email || '';

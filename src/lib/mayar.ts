@@ -52,6 +52,22 @@ export async function createOrderInvoice(
     params: CreateOrderInvoiceParams
 ): Promise<{ link: string } | null> {
     try {
+        // Reuse the stored invoice while it's still payable for the same amount.
+        // Creating a new one overwrites mayar_invoice_id, which orphans any
+        // payment made against the earlier invoice (webhook/reconcile match on it).
+        const { data: existing } = await adminSupabase
+            .from('orders')
+            .select('mayar_invoice_id, mayar_payment_url')
+            .eq('id', params.orderId)
+            .single();
+
+        if (existing?.mayar_invoice_id && existing.mayar_payment_url) {
+            const detail = await getInvoiceStatus(mayar, existing.mayar_invoice_id);
+            if (detail && !isPaidStatus(detail.status) && !isExpiredStatus(detail.status) && detail.amount === params.amount) {
+                return { link: existing.mayar_payment_url };
+            }
+        }
+
         const response = await fetch(`${mayar.baseUrl}/hl/v1/invoice/create`, {
             method: 'POST',
             headers: {
