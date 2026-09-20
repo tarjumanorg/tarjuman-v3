@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=uanunxlglzahnpyytrpa"
+    },
+    "mayar": {
+      "command": "mcp-remote",
+      "args": [
+        "https://mcp.mayar.id/sse",
+        "--transport",
+        "sse-only",
+        "--header",
+        "Authorization:${API_KEY}"
+      ],
+      "env": {
+        "API_KEY": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjNDI2ODdlOC1jODEzLTQ2MDAtYTY1ZC1jMDczZDAwNmM3MjgiLCJhY2NvdW50SWQiOiJmMzc1ZWIwZC01ZjhlLTRjZDItYTNiMS1lYjYxZmE1MTYwZTciLCJjcmVhdGVkQXQiOiIxNzgyMTQwMDAwMjQ3Iiwicm9sZSI6ImRldmVsb3BlciIsInNjb3BlIjp7InJlYWQiOnRydWUsIndyaXRlIjp0cnVlfSwic3ViIjoic2lkZGlxbXV0YXJqaW1AZ21haWwuY29tIiwibmFtZSI6IkZhcmFpZCBBY2FkZW15IiwibGluayI6ImZhcmFpZGFjYWRlbXkiLCJpc1NlbGZEb21haW4iOm51bGwsImlhdCI6MTc4MjE0MDAwMH0.mu2ZGeaA1cvK_cHTYT7O8Kykl933E4VjIXHx2mQ2xLYmkirVIc6pME4bKpQtMZI3D5ck1x9C470MiS6n6JMJV9wrKWaXIBNCVs_-tQ_TIsGwvAZf1wPO-U98JqW3wQZVWsNBG30ankq_ySkZE29cJT1J40Uej6-ZLiPT1ByzE5Lwk9cE_TnWKI07fXHwoc6AlsFg8xyYKnv6meXAStaVmdBn5iVpbKNGIhESxABYDc5EW0bcn6fPYDaMw5dKvDiobSeBdTZThFSD7FcOfcdSpIolXutH2gH7DzjPp1PxzNbK5WdYJ5LjPoo1E_VYJTC8p5j1G-ZeHuAUuPdpdDwPUw"
+      }
+    }
+  }
+}
