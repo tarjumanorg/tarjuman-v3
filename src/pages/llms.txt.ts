@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { createClient } from "../lib/supabase";
-import { PRICING_TIERS, BASE_PRICE, HARD_COPY_FEE } from "../lib/pricing";
+import { PRICING_TIERS, HARD_COPY_FEE } from "../lib/pricing";
 
 export const prerender = false;
 

@@ -10,9 +10,6 @@ const supabase = createClient(Astro);
 
 if (!id) return Astro.redirect("/404");
 
-// Parse transfer proof query params (if any)
-const isPaymentJustCompleted = Astro.url.searchParams.get("success") === "true";
-
 // Auth Check
 const {
     data: { user },

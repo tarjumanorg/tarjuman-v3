@@ -2,15 +2,13 @@
 import Layout from "../layouts/Layout.astro";
 import StructuredData from "../components/StructuredData.astro";
 import { createClient } from "../lib/supabase";
-import {
-    Calendar,
-    AlertTriangle,
-    CheckCircle2,
-    HelpCircle,
-    FileText,
-    Calculator,
-    ArrowRight,
-} from "lucide-svelte";
+import Calendar from "@lucide/astro/icons/calendar";
+import TriangleAlert from "@lucide/astro/icons/triangle-alert";
+import CircleCheck from "@lucide/astro/icons/circle-check";
+import CircleQuestionMark from "@lucide/astro/icons/circle-question-mark";
+import FileText from "@lucide/astro/icons/file-text";
+import Calculator from "@lucide/astro/icons/calculator";
+import ArrowRight from "@lucide/astro/icons/arrow-right";
 
 const supabase = createClient(Astro);
 
@@ -135,7 +133,7 @@ const faqSchema = {
                         <span>Updated: Feb 2026</span>
                     </div>
                     <div class="flex items-center gap-1.5">
-                        <CheckCircle2 class="w-4 h-4 text-green-600" />
+                        <CircleCheck class="w-4 h-4 text-green-600" />
                         <span>Verified by Sworn Translator</span>
                     </div>
                 </div>
@@ -296,7 +294,7 @@ const faqSchema = {
                     <h2
                         class="text-xl sm:text-2xl font-bold mb-6 flex items-center gap-2 text-red-700 dark:text-red-400"
                     >
-                        <AlertTriangle class="w-6 h-6" />
+                        <TriangleAlert class="w-6 h-6" />
                         5 Kesalahan Fatal Pemberkasan
                     </h2>
                     <ul class="space-y-4">
@@ -344,7 +342,7 @@ const faqSchema = {
                 <!-- FAQ (Accordion) -->
                 <section>
                     <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
-                        <HelpCircle class="w-6 h-6 text-primary" />
+                        <CircleQuestionMark class="w-6 h-6 text-primary" />
                         Frequently Asked Questions
                     </h2>
                     <div class="space-y-4">
@@ -573,25 +571,25 @@ const faqSchema = {
                         </h3>
                         <ul class="space-y-3 text-sm">
                             <li class="flex gap-2">
-                                <CheckCircle2
+                                <CircleCheck
                                     class="w-5 h-5 text-green-600 shrink-0"
                                 />
                                 <span>Penerjemah Tersumpah Resmi</span>
                             </li>
                             <li class="flex gap-2">
-                                <CheckCircle2
+                                <CircleCheck
                                     class="w-5 h-5 text-green-600 shrink-0"
                                 />
                                 <span>100% Online, Kirim File PDF</span>
                             </li>
                             <li class="flex gap-2">
-                                <CheckCircle2
+                                <CircleCheck
                                     class="w-5 h-5 text-green-600 shrink-0"
                                 />
                                 <span>Hasil Scan Jernih Siap Upload</span>
                             </li>
                             <li class="flex gap-2">
-                                <CheckCircle2
+                                <CircleCheck
                                     class="w-5 h-5 text-green-600 shrink-0"
                                 />
                                 <span>Hard Copy Bisa Dikirim (Opsional)</span>
