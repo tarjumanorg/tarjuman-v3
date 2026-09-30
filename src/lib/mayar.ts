@@ -11,13 +11,16 @@
  * never recalculates or looks it up.
  *
  * Design note: env vars (apiKey/baseUrl) are passed in via `MayarConfig`
- * rather than read directly from `astro:env/server` in this module, so this
- * file stays safe to import from contexts that don't have server-only env
- * access (e.g. if ever referenced from a client-side Svelte component).
+ * rather than read directly from `astro:env/server` in this module. The one
+ * exception is the payment-received email, which is sent from here (via
+ * `./email`) at the moment an order flips to paid, so it fires exactly once
+ * no matter which caller (webhook, success page, pay route, reconcile) wins.
+ * This module is server-only.
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Tables } from '../types/supabase';
+import { sendOrderEmailById } from './email';
 
 export interface MayarConfig {
     apiKey: string;
@@ -197,12 +200,19 @@ export async function confirmAndUpdateOrder(
             mayar_transaction_id: detail.transactionId ?? order.mayar_transaction_id,
         })
         .eq('id', orderId)
+        .in('payment_status', ['unpaid', 'pending'])
         .select()
-        .single();
+        .maybeSingle();
 
     if (updateError) {
         console.error('Error updating order payment status:', updateError);
         return order;
+    }
+    // No row means another path already settled this order; it sent the email.
+    if (!updated) return order;
+
+    if (nextStatus === 'paid') {
+        await sendOrderEmailById(adminSupabase, 'paymentReceived', orderId);
     }
     return updated;
 }
@@ -276,14 +286,18 @@ export async function reconcilePendingOrders(
     let settled = 0;
     for (const row of pending) {
         if (!row.mayar_invoice_id || !paidIds.has(row.mayar_invoice_id)) continue;
-        const { error: updateError } = await adminSupabase
+        const { data: settledRows, error: updateError } = await adminSupabase
             .from('orders')
             .update({ payment_status: 'paid', status: 'processing' })
-            .eq('id', row.id);
+            .eq('id', row.id)
+            .in('payment_status', ['unpaid', 'pending'])
+            .select('id');
         if (updateError) {
             console.error('Error marking order paid during reconciliation:', updateError);
             continue;
         }
+        if (!settledRows?.length) continue; // another path settled it first
+        await sendOrderEmailById(adminSupabase, 'paymentReceived', row.id);
         settled++;
     }
 

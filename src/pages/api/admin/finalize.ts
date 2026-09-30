@@ -3,6 +3,7 @@ import type { APIRoute } from 'astro';
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "../../../lib/supabase";
 import { SUPABASE_SERVICE_ROLE_KEY } from "astro:env/server";
+import { sendOrderEmailById } from "../../../lib/email";
 
 export const POST: APIRoute = async (context) => {
     const { request, redirect } = context;
@@ -44,49 +45,20 @@ export const POST: APIRoute = async (context) => {
 
     // Update Order Status to 'completed'
     // Also store completed_at
-    const { data: updatedOrder, error: updateError } = await adminSupabase
+    const { error: updateError } = await adminSupabase
         .from("orders")
         .update({
             status: "completed",
             // completed_at: new Date().toISOString() // if column exists
         })
         .eq("id", orderId)
-        .select(`
-            id,
-            profiles (
-                email,
-                full_name
-            )
-        `)
+        .select("id")
         .single();
 
     if (updateError) return new Response(updateError.message, { status: 500 });
 
     // Send 'Completed' email
-    try {
-        const userEmail = (updatedOrder?.profiles as any)?.email;
-        const userName = (updatedOrder?.profiles as any)?.full_name || "User";
-
-        if (userEmail) {
-            const { sendEmail } = await import("../../../lib/sendpulse");
-            await sendEmail({
-                to: userEmail,
-                toName: userName,
-                subject: "Your translation order is complete!",
-                html: `
-                    <h2>Translation Complete</h2>
-                    <p>Hi ${userName},</p>
-                    <p>Great news! The final files for your translation order (Order ID: <b>${updatedOrder.id}</b>) have been uploaded.</p>
-                    <p>Your order is now complete. Please log in to your dashboard to download your translated documents.</p>
-                    <p>Thank you for using Tarjuman.</p>
-                    <br/>
-                    <p>Best regards,<br/>The Tarjuman Team</p>
-                `
-            });
-        }
-    } catch (e) {
-        console.error("[Email] Failed to send complete email:", e);
-    }
+    await sendOrderEmailById(adminSupabase, "orderComplete", orderId);
 
     return redirect(`/admin/orders/${orderId}`);
 };

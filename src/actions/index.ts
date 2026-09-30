@@ -1,7 +1,7 @@
 import { defineAction } from 'astro:actions';
 import { z } from 'astro/zod';
 import { createClient } from '../lib/supabase';
-import { sendEmail } from '../lib/sendpulse';
+import { sendOrderEmailById } from '../lib/email';
 import { SUPABASE_SERVICE_ROLE_KEY } from 'astro:env/server';
 
 export const server = {
@@ -35,6 +35,8 @@ export const server = {
                 SUPABASE_SERVICE_ROLE_KEY
             );
 
+            // Only flip orders that are not already paid, so a Mayar-settled order
+            // is not reset to 'processing' and the customer is not emailed twice.
             const { data: updatedOrder, error: updateError } = await adminSupabase
                 .from("orders")
                 .update({
@@ -43,40 +45,14 @@ export const server = {
                     updated_at: new Date().toISOString(),
                 })
                 .eq("id", orderId)
-                .select(`
-                    id, 
-                    profiles (
-                        email,
-                        full_name
-                    )
-                `)
-                .single();
+                .or('payment_status.is.null,payment_status.neq.paid')
+                .select('id')
+                .maybeSingle();
 
             if (updateError) throw new Error("Failed to update order status");
 
-            try {
-                const profiles = updatedOrder?.profiles;
-                const userEmail = (profiles as any)?.email;
-                const userName = (profiles as any)?.full_name || "User";
-
-                if (userEmail) {
-                    await sendEmail({
-                        to: userEmail,
-                        toName: userName,
-                        subject: "We're processing your order!",
-                        html: `
-                            <h2>Payment Received</h2>
-                            <p>Hi ${userName},</p>
-                            <p>Thank you for your payment!</p>
-                            <p>Your order for translation services (Order ID: <b>${updatedOrder.id}</b>) is now being processed.</p>
-                            <p>We will notify you once your draft is ready for review.</p>
-                            <br/>
-                            <p>Best regards,<br/>The Tarjuman Team</p>
-                        `
-                    });
-                }
-            } catch (e) {
-                console.error("[Email] Failed to send processing email:", e);
+            if (updatedOrder) {
+                await sendOrderEmailById(adminSupabase, 'paymentReceived', orderId);
             }
 
             return { success: true };

@@ -47,10 +47,7 @@ export default defineConfig({
       MAYAR_API_URL: envField.string({ context: "server", access: "secret", default: "https://api.mayar.club" }),
       MAYAR_WEBHOOK_TOKEN: envField.string({ context: "server", access: "secret", optional: true }),
       SITE_URL: envField.string({ context: "server", access: "secret", default: "https://tarjuman.org" }),
-      SENDPULSE_API_ID: envField.string({ context: "server", access: "secret", optional: true }),
-      SENDPULSE_API_SECRET: envField.string({ context: "server", access: "secret", optional: true }),
-      SENDPULSE_ID: envField.string({ context: "server", access: "secret", optional: true }),
-      SENDPULSE_SECRET: envField.string({ context: "server", access: "secret", optional: true }),
+      SENDER_API_KEY: envField.string({ context: "server", access: "secret", optional: true }),
     }
   }
 });

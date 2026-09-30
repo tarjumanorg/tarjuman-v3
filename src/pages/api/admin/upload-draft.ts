@@ -3,6 +3,7 @@ import type { APIRoute } from 'astro';
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "../../../lib/supabase";
 import { SUPABASE_SERVICE_ROLE_KEY } from "astro:env/server";
+import { sendOrderEmailById } from "../../../lib/email";
 
 export const POST: APIRoute = async (context) => {
     const { request, redirect } = context;
@@ -46,45 +47,17 @@ export const POST: APIRoute = async (context) => {
     );
 
     // Update Order Status to 'review'
-    const { data: updatedOrder, error: updateError } = await adminSupabase
+    const { error: updateError } = await adminSupabase
         .from("orders")
         .update({ status: "review" })
         .eq("id", orderId)
-        .select(`
-            id,
-            profiles (
-                email,
-                full_name
-            )
-        `)
+        .select("id")
         .single();
 
     if (updateError) return new Response(updateError.message, { status: 500 });
 
     // Send 'Review' email
-    try {
-        const userEmail = (updatedOrder?.profiles as any)?.email;
-        const userName = (updatedOrder?.profiles as any)?.full_name || "User";
-
-        if (userEmail) {
-            const { sendEmail } = await import("../../../lib/sendpulse");
-            await sendEmail({
-                to: userEmail,
-                toName: userName,
-                subject: "Your translation draft is ready for review!",
-                html: `
-                    <h2>Draft Ready for Review</h2>
-                    <p>Hi ${userName},</p>
-                    <p>The draft for your translation order (Order ID: <b>${updatedOrder.id}</b>) has been uploaded and is ready for your review!</p>
-                    <p>Please log in to your dashboard to review it. You can approve the translation or request changes.</p>
-                    <br/>
-                    <p>Best regards,<br/>The Tarjuman Team</p>
-                `
-            });
-        }
-    } catch (e) {
-        console.error("[Email] Failed to send draft review email:", e);
-    }
+    await sendOrderEmailById(adminSupabase, "draftReady", orderId);
 
     return redirect(`/admin/orders/${orderId}`);
 };

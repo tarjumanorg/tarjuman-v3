@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { createClient } from "../../../lib/supabase";
+import { sendOrderEmail } from "../../../lib/email";
 
 export const GET: APIRoute = async (context) => {
     const { searchParams } = new URL(context.request.url);
@@ -33,29 +34,11 @@ export const GET: APIRoute = async (context) => {
             if (now - createdAtTime < 60000) {
                 // Determine user's name from metadata, fallback to empty string or email prefix
                 const userName = authData.session.user.user_metadata?.full_name
-                    || authData.session.user.email?.split("@")[0]
-                    || "User";
+                    || authData.session.user.email?.split("@")[0];
                 const userEmail = authData.session.user.email;
 
                 if (userEmail) {
-                    try {
-                        const { sendEmail } = await import("../../../lib/sendpulse");
-                        await sendEmail({
-                            to: userEmail,
-                            toName: userName,
-                            subject: "Welcome to Tarjuman!",
-                            html: `
-                                <h1>Welcome to Tarjuman!</h1>
-                                <p>Hi ${userName},</p>
-                                <p>Thank you for signing up to Tarjuman. We are excited to help you with your translation needs.</p>
-                                <p>You can start by requesting a quotation or uploading your documents on your dashboard.</p>
-                                <br/>
-                                <p>Best regards,<br/>The Tarjuman Team</p>
-                            `
-                        });
-                    } catch (e) {
-                        console.error("[Email] Failed to send welcome email:", e);
-                    }
+                    await sendOrderEmail("welcome", { to: userEmail, name: userName });
                 }
             }
         }
