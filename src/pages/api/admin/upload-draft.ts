@@ -24,14 +24,14 @@ export const POST: APIRoute = async (context) => {
 
     // Public URL? Or Signed URL? For now, we assume user can access via logged-in check.
     // We just need to track the file in `order_files` or a separate column?
-    // Let's use `order_files` table with type 'watermarked'.
+    // Let's use `order_files` table with type 'draft'.
 
     const { error: dbError } = await supabase
         .from("order_files")
         .insert({
             order_id: orderId,
             file_path: filePath,
-            file_type: "watermarked",
+            file_type: "draft",
             page_count: 0 // Draft count not strictly needed
         });
 

@@ -6,7 +6,7 @@ import { SUPABASE_SERVICE_ROLE_KEY } from "astro:env/server";
 
 const BUCKET_BY_FILE_TYPE: Record<string, string> = {
     source: "uploads",
-    watermarked: "watermarked",
+    draft: "watermarked",
     final: "finals",
 };
 
