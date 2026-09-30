@@ -404,6 +404,7 @@
                     <Wallet class="h-4 w-4 text-muted-foreground shrink-0" />
                     <div class="flex-1">
                         <Slider
+                            type="multiple"
                             value={[activeTierIndex]}
                             onValueChange={(v: number[]) => {
                                 if (v && v.length > 0) {
