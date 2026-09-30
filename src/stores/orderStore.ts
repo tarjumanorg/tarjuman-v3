@@ -23,7 +23,7 @@ export const promoError = atom('');
 export const promoLoading = atom(false);
 export const promoApplied = atom(false);
 
-import { PRICING_TIERS, getTierByDays, HARD_COPY_FEE } from '../lib/pricing';
+import { getTierByDays, HARD_COPY_FEE } from '../lib/pricing';
 
 export const orderStore = map<OrderState>({
     files: [],
