@@ -74,7 +74,7 @@ const schemaGraph = [
 >
     <JsonLd graph={schemaGraph} />
 
-    <div class="bg-background min-h-screen pb-12">
+    <main class="bg-background min-h-screen pb-12">
         <!-- Header / Breadcrumb Area -->
         <div class="bg-muted/30 border-b">
             <div class="container mx-auto px-4 py-8 sm:py-12">
@@ -207,7 +207,7 @@ const schemaGraph = [
                         {
                             requiredDocs.map((doc, i) => (
                                 <div class="flex gap-4 p-4 sm:p-5 rounded-xl border bg-card hover:border-primary/50 transition-colors">
-                                    <div class="font-bold text-2xl text-primary/20 select-none">
+                                    <div class="font-bold text-2xl text-primary/70 select-none">
                                         {(i + 1).toString().padStart(2, "0")}
                                     </div>
                                     <div class="flex-1">
@@ -227,7 +227,7 @@ const schemaGraph = [
                                         </p>
                                         {doc.notes && (
                                             <div class="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg border border-transparent hover:border-border transition-colors">
-                                                <span class="font-semibold text-xs uppercase tracking-wider text-muted-foreground/70 block mb-1">
+                                                <span class="font-semibold text-xs uppercase tracking-wider text-muted-foreground block mb-1">
                                                     Catatan Penting:
                                                 </span>
                                                 {doc.notes}
@@ -245,7 +245,7 @@ const schemaGraph = [
                                 <h3 class="text-lg font-bold mb-4 text-muted-foreground">
                                     Dokumen Pendukung (Opsional)
                                 </h3>
-                                <div class="grid gap-4 opacity-80 hover:opacity-100 transition-opacity">
+                                <div class="grid gap-4">
                                     {optionalDocs.map((doc) => (
                                         <div class="flex gap-4 p-4 rounded-xl border border-dashed bg-card/50">
                                             <div class="flex-1">
@@ -276,7 +276,7 @@ const schemaGraph = [
                     </h2>
                     <ul class="space-y-4">
                         <li class="flex gap-3">
-                            <span class="font-bold text-red-500">1.</span>
+                            <span class="font-bold text-red-700 dark:text-red-400">1.</span>
                             <span class="text-foreground/90"
                                 ><strong>Salah Penerjemah:</strong> Menggunakan penerjemah
                                 biasa (non-tersumpah). Cap penerjemah tersumpah adalah
@@ -284,7 +284,7 @@ const schemaGraph = [
                             >
                         </li>
                         <li class="flex gap-3">
-                            <span class="font-bold text-red-500">2.</span>
+                            <span class="font-bold text-red-700 dark:text-red-400">2.</span>
                             <span class="text-foreground/90"
                                 ><strong>Scan Buram:</strong> Hasil scan dokumen asli
                                 atau terjemahan tidak terbaca jelas saat di-zoom oleh
@@ -292,7 +292,7 @@ const schemaGraph = [
                             >
                         </li>
                         <li class="flex gap-3">
-                            <span class="font-bold text-red-500">3.</span>
+                            <span class="font-bold text-red-700 dark:text-red-400">3.</span>
                             <span class="text-foreground/90"
                                 ><strong>Nama Tidak Konsisten:</strong> Ejaan nama
                                 di Ijazah beda dengan di Paspor. (Solusi: Lampirkan
@@ -300,14 +300,14 @@ const schemaGraph = [
                             >
                         </li>
                         <li class="flex gap-3">
-                            <span class="font-bold text-red-500">4.</span>
+                            <span class="font-bold text-red-700 dark:text-red-400">4.</span>
                             <span class="text-foreground/90"
                                 ><strong>SKCK Expired:</strong> Mengupload SKCK yang
                                 sudah lewat masa berlakunya saat seleksi berlangsung.</span
                             >
                         </li>
                         <li class="flex gap-3">
-                            <span class="font-bold text-red-500">5.</span>
+                            <span class="font-bold text-red-700 dark:text-red-400">5.</span>
                             <span class="text-foreground/90"
                                 ><strong>File Corrupt:</strong> Tidak mengecek ulang
                                 file PDF sebelum upload ke portal.</span
@@ -479,7 +479,7 @@ const schemaGraph = [
                 </div>
             </aside>
         </div>
-    </div>
+    </main>
 </Layout>
 
 <style>
