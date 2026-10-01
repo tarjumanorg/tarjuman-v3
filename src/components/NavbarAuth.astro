@@ -3,6 +3,7 @@ import Navbar from "./Navbar.astro";
 import { createClient } from "../lib/supabase";
 
 // Middleware already ran auth.getUser() for this request and stored it in locals.
+// Only used on server-rendered pages; prerendered pages pass staticNav to Layout instead.
 const user = Astro.locals.user;
 
 let isAdmin = false;
