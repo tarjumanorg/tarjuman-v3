@@ -1115,7 +1115,7 @@ In `src/components/Footer.astro` change the three `<h4 class="font-serif font-bo
 
 - [ ] **Step 3b: Remove the street address from the footer**
 
-The business has no public storefront (the owner asked for the address to be removed). In `src/components/Footer.astro` delete the whole `<li>` in the Kontak list that contains the map-pin SVG and the text `Jl. Raya Masjid Al Hidayah No.1A, Pejaten Barat, Ps. Minggu, Jakarta Selatan 12510`. Then search the repo for other copies (`Select-String -Path (Get-ChildItem src,docs,public -Recurse -File).FullName -Pattern 'Pejaten|Masjid Al Hidayah'`); fix any user-facing hit, leave unrelated hits and report them. `LocalBusiness` stays out of the schema.
+The business has no public storefront (the owner asked for the address to be removed). In `src/components/Footer.astro` delete the whole `<li>` in the Kontak list that contains the map-pin SVG and the street address text. Then search the repo for other copies (`search src, docs and public for the street address`); fix any user-facing hit, leave unrelated hits and report them. `LocalBusiness` stays out of the schema.
 
 - [ ] **Step 4: Muted text contrast**
 
