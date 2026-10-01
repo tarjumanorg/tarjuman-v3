@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import StructuredData from "../components/StructuredData.astro";
+import JsonLd from "../components/JsonLd.astro";
+import { articleNode, breadcrumbNode, faqNode, organizationNode } from "../lib/site.ts";
 import { createClient } from "../lib/supabase";
 import Calendar from "@lucide/astro/icons/calendar";
 import TriangleAlert from "@lucide/astro/icons/triangle-alert";
@@ -23,7 +24,7 @@ const currentYear = requirements?.[0]?.year ?? new Date().getFullYear();
 const requiredDocs = requirements?.filter((r) => r.is_required) ?? [];
 const optionalDocs = requirements?.filter((r) => !r.is_required) ?? [];
 
-import { BASE_PRICE, formatPrice } from "../lib/pricing";
+import { BASE_PRICE, PRICING_TIERS, formatPrice } from "../lib/pricing";
 
 // Estimate total pages for the widget
 const totalPagesMin = requiredDocs.reduce((sum, r) => sum + r.typical_pages, 0);
@@ -33,69 +34,45 @@ const totalPagesMax =
 const estimatedMin = totalPagesMin * BASE_PRICE;
 const estimatedMax = totalPagesMax * BASE_PRICE;
 
-// Structured Data (JSON-LD)
-const schemaData = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: `Panduan Lengkap & Checklist Dokumen Beasiswa Arab Saudi ${currentYear}`,
-    image: "https://tarjuman.org/og-image.webp",
-    author: {
-        "@type": "Organization",
-        name: "Tarjuman - Jasa Penerjemah Tersumpah",
-        url: "https://tarjuman.org",
-    },
-    publisher: {
-        "@type": "Organization",
-        name: "Tarjuman",
-        logo: {
-            "@type": "ImageObject",
-            url: "https://tarjuman.org/logo.png",
-        },
-    },
-    datePublished: "2026-02-16",
-    dateModified: new Date().toISOString().split("T")[0],
-    description:
-        "Panduan lengkap persiapan dokumen untuk pendaftaran beasiswa Study in Saudi 2026. Simak syarat wajib, timeline pendaftaran, dan estimasi biaya penerjemah tersumpah.",
-};
+const description = `Persiapkan dokumen terjemah ijazah & transkrip untuk Study in Saudi ${currentYear}. Cek syarat wajib, hindari kesalahan fatal pemberkasan, dan hitung biayanya.`;
 
-const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: [
-        {
-            "@type": "Question",
-            name: "Apakah dokumen harus diterjemahkan tersumpah?",
-            acceptedAnswer: {
-                "@type": "Answer",
-                text: "Ya, mayoritas universitas di Arab Saudi mewajibkan terjemahan resmi (sworn translation) untuk ijazah dan transkrip nilai agar diakui validitasnya.",
-            },
-        },
-        {
-            "@type": "Question",
-            name: "Berapa lama proses penerjemahan dokumen?",
-            acceptedAnswer: {
-                "@type": "Answer",
-                text: "Di Tarjuman, proses standar memakan waktu 3-7 hari kerja tergantung jumlah halaman. Tersedia layanan kilat jika dibutuhkan.",
-            },
-        },
-        {
-            "@type": "Question",
-            name: "Apakah perlu legalisir Kemenlu/Kemenkumham?",
-            acceptedAnswer: {
-                "@type": "Answer",
-                text: "Untuk tahap pendaftaran awal (upload portal), biasanya cukup terjemahan tersumpah. Legalisir Kemenlu/Kemenkumham (Apostille) biasanya diminta setelah dinyatakan diterima (LoA) untuk pengurusan visa.",
-            },
-        },
-    ],
-};
+// One list feeds both the visible accordion and the FAQPage schema.
+const faqItems = [
+    {
+        question: "Apakah dokumen harus diterjemahkan tersumpah?",
+        answer: "Ya. Universitas di Arab Saudi mewajibkan dokumen akademik (Ijazah, Transkrip) dan legal (SKCK, Akta) diterjemahkan oleh Sworn Translator (Penerjemah Tersumpah) resmi agar memiliki kekuatan hukum. Terjemahan biasa tanpa cap basah penerjemah tersumpah berisiko tinggi ditolak.",
+    },
+    {
+        question: "Berapa lama proses terjemahan selesai?",
+        answer: `Tarjuman menawarkan ${PRICING_TIERS.length} pilihan kecepatan, harga per halaman: ${PRICING_TIERS.map((t) => `${t.label} ${t.days} hari kerja (${formatPrice(t.price)})`).join(", ")}. Pesan jauh-jauh hari agar bisa memilih paket Reguler yang paling hemat.`,
+    },
+    {
+        question: "Apakah perlu legalisir Kemenlu & Kemenkumham (Apostille)?",
+        answer: "Untuk tahap pendaftaran (upload portal), mayoritas universitas hanya meminta scan asli dan terjemahan tersumpah. Anda belum perlu Apostille atau legalisir saat masih tahap seleksi. Legalisir Kemenlu, Kemenkumham, atau Kedutaan biasanya baru diurus setelah Anda dinyatakan diterima (mendapat Isy'ar Qabul) untuk keperluan pengurusan Visa Pelajar.",
+    },
+];
+
+const schemaGraph = [
+    organizationNode(),
+    articleNode({
+        headline: `Panduan Lengkap & Checklist Dokumen Beasiswa Arab Saudi ${currentYear}`,
+        description:
+            "Panduan lengkap persiapan dokumen untuk pendaftaran beasiswa Study in Saudi 2026. Simak syarat wajib, timeline pendaftaran, dan estimasi biaya penerjemah tersumpah.",
+        datePublished: "2026-02-16",
+    }),
+    faqNode(faqItems),
+    breadcrumbNode([
+        { name: "Beranda", path: "/" },
+        { name: "Beasiswa Saudi", path: "/beasiswa-saudi" },
+    ]),
+];
 ---
 
 <Layout
     title={`Syarat & Checklist Dokumen Pendaftaran Beasiswa Arab Saudi ${currentYear}`}
-    description={`Persiapkan dokumen terjemah ijazah & transkrip untuk Study in Saudi ${currentYear}. Cek syarat wajib, hindari kesalahan fatal pemberkasan, dan hitung biayanya.`}
+    {description}
 >
-    <StructuredData type="Article" data={schemaData} />
-    <StructuredData type="FAQPage" data={faqSchema} />
+    <JsonLd graph={schemaGraph} />
 
     <div class="bg-background min-h-screen pb-12">
         <!-- Header / Breadcrumb Area -->
@@ -105,11 +82,11 @@ const faqSchema = {
                     class="flex items-center gap-2 text-sm text-muted-foreground mb-4"
                 >
                     <a href="/" class="hover:text-primary transition-colors"
-                        >Home</a
+                        >Beranda</a
                     >
                     <span>/</span>
                     <span class="text-foreground font-medium"
-                        >Panduan Beasiswa</span
+                        >Beasiswa Saudi</span
                     >
                 </div>
                 <h1
@@ -346,130 +323,33 @@ const faqSchema = {
                         Frequently Asked Questions
                     </h2>
                     <div class="space-y-4">
-                        <details
-                            class="group rounded-lg border bg-card open:ring-1 open:ring-primary/20"
-                        >
-                            <summary
-                                class="flex cursor-pointer list-none items-center justify-between p-4 font-medium sm:p-6"
-                            >
-                                Apakah dokumen harus diterjemahkan tersumpah?
-                                <span
-                                    class="opacity-70 transition group-open:rotate-180"
-                                >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="20"
-                                        height="20"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        ><path d="m6 9 6 6 6-6"></path></svg
-                                    >
-                                </span>
-                            </summary>
-                            <div
-                                class="border-t px-4 pb-6 pt-2 sm:px-6 text-muted-foreground leading-relaxed"
-                            >
-                                Ya. Universitas di Arab Saudi mewajibkan dokumen
-                                akademik (Ijazah, Transkrip) dan legal (SKCK,
-                                Akta) diterjemahkan oleh <em
-                                    >Sworn Translator</em
-                                > (Penerjemah Tersumpah) resmi agar memiliki kekuatan
-                                hukum. Terjemahan biasa tanpa cap basah penerjemah
-                                tersumpah berisiko tinggi ditolak.
-                            </div>
-                        </details>
-
-                        <details
-                            class="group rounded-lg border bg-card open:ring-1 open:ring-primary/20"
-                        >
-                            <summary
-                                class="flex cursor-pointer list-none items-center justify-between p-4 font-medium sm:p-6"
-                            >
-                                Berapa lama proses terjemahan selesai?
-                                <span
-                                    class="opacity-70 transition group-open:rotate-180"
-                                >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="20"
-                                        height="20"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        ><path d="m6 9 6 6 6-6"></path></svg
-                                    >
-                                </span>
-                            </summary>
-                            <div
-                                class="border-t px-4 pb-6 pt-2 sm:px-6 text-muted-foreground leading-relaxed"
-                            >
-                                Di Tarjuman, kami menawarkan beberapa opsi
-                                kecepatan:
-                                <ul class="mt-2 list-disc pl-5 space-y-1">
-                                    <li>
-                                        <strong>Reguler (Recommended):</strong> 5-9
-                                        hari kerja (Paling Hemat).
-                                    </li>
-                                    <li>
-                                        <strong>Express:</strong> 2-3 hari kerja.
-                                    </li>
-                                    <li>
-                                        <strong>Urgent/Kilat:</strong> 24 jam (Jika
-                                        slot tersedia).
-                                    </li>
-                                </ul>
-                                Saran kami: Pesan jauh-jauh hari agar bisa ambil paket
-                                Reguler yang lebih hemat.
-                            </div>
-                        </details>
-
-                        <details
-                            class="group rounded-lg border bg-card open:ring-1 open:ring-primary/20"
-                        >
-                            <summary
-                                class="flex cursor-pointer list-none items-center justify-between p-4 font-medium sm:p-6"
-                            >
-                                Apakah perlu legalisir Kemenlu & Kemenkumham
-                                (Apostille)?
-                                <span
-                                    class="opacity-70 transition group-open:rotate-180"
-                                >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="20"
-                                        height="20"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        ><path d="m6 9 6 6 6-6"></path></svg
-                                    >
-                                </span>
-                            </summary>
-                            <div
-                                class="border-t px-4 pb-6 pt-2 sm:px-6 text-muted-foreground leading-relaxed"
-                            >
-                                Untuk <strong
-                                    >tahap pendaftaran (upload portal)</strong
-                                >, mayoritas universitas HANYA meminta scan asli
-                                + terjemahan tersumpah. Anda belum perlu
-                                Apostille/Legalisir saat masih tahap seleksi.<br
-                                /><br />
-                                Legalisir Kemenlu/Kemenkumham/Kedutaan biasanya baru
-                                diurus <strong>SETELAH</strong> Anda dinyatakan diterima
-                                (mendapat Isy'ar Qabul) untuk keperluan pengurusan
-                                Visa Pelajar.
-                            </div>
-                        </details>
+                        {
+                            faqItems.map((item) => (
+                                <details class="group rounded-lg border bg-card open:ring-1 open:ring-primary/20">
+                                    <summary class="flex cursor-pointer list-none items-center justify-between p-4 font-medium sm:p-6">
+                                        {item.question}
+                                        <span class="opacity-70 transition group-open:rotate-180">
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="20"
+                                                height="20"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="2"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                            >
+                                                <path d="m6 9 6 6 6-6" />
+                                            </svg>
+                                        </span>
+                                    </summary>
+                                    <div class="border-t px-4 pb-6 pt-2 sm:px-6 text-muted-foreground leading-relaxed">
+                                        <p>{item.answer}</p>
+                                    </div>
+                                </details>
+                            ))
+                        }
                     </div>
                 </section>
 

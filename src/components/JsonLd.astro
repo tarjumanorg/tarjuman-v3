@@ -1,0 +1,11 @@
+---
+import { serializeJsonLd } from "../lib/json-ld.ts";
+
+export interface Props {
+	graph: readonly object[];
+}
+
+const { graph } = Astro.props;
+---
+
+<script is:inline type="application/ld+json" set:html={serializeJsonLd(graph)} />
