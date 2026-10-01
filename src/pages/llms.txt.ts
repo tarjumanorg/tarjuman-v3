@@ -58,7 +58,14 @@ export const GET: APIRoute = async ({ request, cookies, redirect }) => {
 
     const content = `# Tarjuman - Sworn Translation Services
 
-Tarjuman is an official, government-certified sworn translation service based in Indonesia. We specialize in translating academic and legal documents from Indonesian to Arabic, primarily for the "Study in Saudi" scholarship program, as well as for general embassy or legal requirements. Our translators hold official decrees (SK) from the Indonesian Ministry of Law and Human Rights (Kemenkumham).
+> Tarjuman is an official, government-certified sworn translation service based in Indonesia. We specialize in translating academic and legal documents from Indonesian to Arabic, primarily for the "Study in Saudi" scholarship program, as well as for general embassy or legal requirements. Our translators hold official decrees (SK) from the Indonesian Ministry of Law and Human Rights (Kemenkumham).
+
+## Pages
+
+- [Beranda](https://tarjuman.org/): Upload documents, see the price instantly and order a sworn translation online.
+- [Panduan Beasiswa Arab Saudi](https://tarjuman.org/beasiswa-saudi): Document checklist, timeline and cost estimate for Study in Saudi applications.
+- [Kebijakan Privasi](https://tarjuman.org/privacy): How personal data and uploaded documents are handled.
+- [Syarat & Ketentuan](https://tarjuman.org/terms): Terms of use for the translation service.
 
 ## Core Data & Services
 
@@ -95,6 +102,7 @@ A: No. For the initial application portal upload stage, only the Sworn Translati
         status: 200,
         headers: {
             "Content-Type": "text/plain; charset=utf-8",
+            "Cache-Control": "public, max-age=3600",
         },
     });
 };
