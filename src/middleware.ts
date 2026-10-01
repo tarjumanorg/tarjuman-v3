@@ -1,8 +1,22 @@
 
-import { defineMiddleware } from "astro:middleware";
+import { defineMiddleware, sequence } from "astro:middleware";
 import { createServerClient, parseCookieHeader } from "@supabase/ssr";
+import { isPrivatePath } from "./lib/private-paths.ts";
 
-export const onRequest = defineMiddleware(async (context, next) => {
+// Wraps the whole chain, so it also covers redirects and JSON error responses from the handler below.
+const seoHeaders = defineMiddleware(async ({ url }, next) => {
+    const response = await next();
+    if (isPrivatePath(url.pathname)) {
+        response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    }
+    if (url.pathname.startsWith("/_server-islands/")) {
+        // Per-user navbar markup must never be shared by a CDN or browser cache.
+        response.headers.set("Cache-Control", "private, no-store");
+    }
+    return response;
+});
+
+const appMiddleware = defineMiddleware(async (context, next) => {
     const { request, locals } = context;
     const url = new URL(request.url);
 
@@ -14,6 +28,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     const isAdminPath = url.pathname.startsWith("/admin");
     const isAdminApiPath = url.pathname.startsWith("/api/admin");
     const isAuthApi = url.pathname.startsWith("/api/auth");
+    const isServerIsland = url.pathname.startsWith("/_server-islands/");
 
     // create supabase client
     const supabase = createServerClient(
@@ -47,7 +62,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     locals.user = user;
 
     // Maintenance Redirection
-    if (isMaintenanceMode && !isAsset && !isMaintenancePath && !isLoginPath && !isAdminPath && !isAdminApiPath && !isAuthApi) {
+    if (isMaintenanceMode && !isAsset && !isMaintenancePath && !isLoginPath && !isAdminPath && !isAdminApiPath && !isAuthApi && !isServerIsland) {
         // Allow admins to bypass maintenance
         let isAdmin = false;
         if (user) {
@@ -104,3 +119,5 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     return next();
 });
+
+export const onRequest = sequence(seoHeaders, appMiddleware);
