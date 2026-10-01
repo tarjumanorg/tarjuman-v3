@@ -137,8 +137,9 @@
     {/if}
 
     <!-- Dropzone -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -- drop target only; the file input inside is the keyboard control -->
     <div
-        class="relative rounded-lg border-2 border-dashed p-4 sm:p-8 text-center transition-colors
+        class="relative rounded-lg border-2 border-dashed p-4 sm:p-8 text-center transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring
     {isDragging
             ? 'border-primary bg-primary/5'
             : errorMessage
@@ -147,11 +148,10 @@
         ondragover={handleDragOver}
         ondragleave={handleDragLeave}
         ondrop={handleDrop}
-        role="button"
-        tabindex="0"
     >
         <input
             type="file"
+            aria-label="Pilih berkas dokumen"
             multiple
             accept=".pdf,image/*"
             class="absolute inset-0 cursor-pointer opacity-0"

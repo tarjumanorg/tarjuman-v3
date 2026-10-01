@@ -1,8 +1,18 @@
 
-import { defineMiddleware } from "astro:middleware";
+import { defineMiddleware, sequence } from "astro:middleware";
 import { createServerClient, parseCookieHeader } from "@supabase/ssr";
+import { isPrivatePath } from "./lib/private-paths.ts";
 
-export const onRequest = defineMiddleware(async (context, next) => {
+// Wraps the whole chain, so it also covers redirects and JSON error responses from the handler below.
+const seoHeaders = defineMiddleware(async ({ url }, next) => {
+    const response = await next();
+    if (isPrivatePath(url.pathname)) {
+        response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    }
+    return response;
+});
+
+const appMiddleware = defineMiddleware(async (context, next) => {
     const { request, locals } = context;
     const url = new URL(request.url);
 
@@ -104,3 +114,5 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     return next();
 });
+
+export const onRequest = sequence(seoHeaders, appMiddleware);

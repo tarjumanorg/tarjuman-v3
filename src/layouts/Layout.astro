@@ -1,27 +1,35 @@
 ---
 import Navbar from "../components/Navbar.astro";
+import NavbarAuth from "../components/NavbarAuth.astro";
 import Footer from "../components/Footer.astro";
+import Head from "../components/Head.astro";
 import "../styles/global.css";
-import { SEO } from "astro-seo";
+import { SITE } from "../lib/site.ts";
 
 // Import Fonts
 import "@fontsource-variable/plus-jakarta-sans";
 import "@fontsource-variable/lora";
+// Preloaded so the web fonts arrive before first paint; the late swap otherwise shifts the layout (CLS).
+import sansFont from "@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2?url";
+import serifFont from "@fontsource-variable/lora/files/lora-latin-wght-normal.woff2?url";
 
 export interface Props {
 	title?: string;
 	description?: string;
 	image?: string;
-	canonical?: string;
+	imageAlt?: string;
 	type?: string;
+	/** Prerendered pages cannot read the login cookie, so they get a fixed guest navbar. */
+	staticNav?: boolean;
 }
 
 const {
 	title = "Tarjuman - Jasa Penerjemah Tersumpah Resmi",
 	description = "Jasa penerjemah tersumpah (sworn translator) resmi untuk persyaratan beasiswa Study in Saudi. Diakui Kemenkumham, Kedutaan, & Universitas di Arab Saudi. Cepat & Terpercaya.",
-	image = "https://tarjuman.org/og-image.webp",
-	canonical = Astro.url.href,
+	image = SITE.ogImage,
+	imageAlt,
 	type = "website",
+	staticNav = false,
 } = Astro.props;
 ---
 
@@ -31,33 +39,10 @@ const {
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<link rel="icon" type="image/png" href="/icon.png" />
 		<meta name="generator" content={Astro.generator} />
+		<link rel="preload" as="font" type="font/woff2" href={sansFont} crossorigin />
+		<link rel="preload" as="font" type="font/woff2" href={serifFont} crossorigin />
 
-		<!-- Dynamic SEO handled by astro-seo -->
-		<SEO
-			title={title}
-			description={description}
-			canonical={canonical}
-			openGraph={{
-				basic: {
-					title,
-					type,
-					image,
-					url: canonical,
-				},
-				optional: {
-					description,
-					locale: "id_ID",
-					siteName: "Tarjuman",
-				},
-			}}
-			twitter={{
-				card: "summary_large_image",
-				title,
-				description,
-				image,
-				imageAlt: title,
-			}}
-		/>
+		<Head {title} {description} {image} {imageAlt} {type} />
 
 		<!-- Google tag (gtag.js) -->
 		<script
@@ -76,9 +61,16 @@ const {
 		</script>
 	</head>
 	<body>
-		<Navbar />
+		{staticNav ? <Navbar user={null} isAdmin={false} /> : <NavbarAuth />}
 		<slot />
 		<Footer />
+		<script>
+			document.addEventListener("click", (event) => {
+				const target = event.target;
+				if (!(target instanceof Element) || !target.closest("#mobile-menu-btn")) return;
+				document.getElementById("mobile-menu")?.classList.toggle("hidden");
+			});
+		</script>
 	</body>
 </html>
 

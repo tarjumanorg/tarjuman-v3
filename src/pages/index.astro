@@ -2,15 +2,12 @@
 import Layout from "../layouts/Layout.astro";
 import FileDropzone from "../components/FileDropzone.svelte";
 import OrderConfig from "../components/OrderConfig.svelte";
-import StructuredData from "../components/StructuredData.astro";
+import JsonLd from "../components/JsonLd.astro";
+import { organizationNode, websiteNode, serviceNode } from "../lib/site.ts";
 import { PRICING_TIERS, formatPrice } from "../lib/pricing";
 
 const minPricePrice = Math.min(...PRICING_TIERS.map((t) => t.price));
-const maxPricePrice = Math.max(...PRICING_TIERS.map((t) => t.price));
 const minPriceString = formatPrice(minPricePrice)
-	.replace(",00", "")
-	.replace("Rp", "Rp ");
-const maxPriceString = formatPrice(maxPricePrice)
 	.replace(",00", "")
 	.replace("Rp", "Rp ");
 
@@ -19,22 +16,10 @@ const seoData = {
 	description: `Jasa penerjemah tersumpah bahasa Arab online. Harga mulai ${minPriceString}/halaman. Penerjemah resmi SK Kemenkumham untuk keperluan beasiswa Saudi, kedutaan, & legal.`,
 };
 
-const localBusinessData = {
-	name: "Tarjuman",
-	image: "https://tarjuman.org/og-image.webp",
-	"@id": "https://tarjuman.org",
-	url: "https://tarjuman.org",
-	priceRange: `${minPriceString} - ${maxPriceString}`,
-	description: seoData.description,
-	address: {
-		"@type": "PostalAddress",
-		addressCountry: "ID",
-	},
-};
 ---
 
 <Layout title={seoData.title} description={seoData.description}>
-	<StructuredData type="LocalBusiness" data={localBusinessData} />
+	<JsonLd graph={[organizationNode(), websiteNode(), serviceNode()]} />
 	<main class="min-h-screen bg-background">
 		<!-- Promo Banner -->
 		<aside

@@ -1,8 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /api/
 Disallow: /admin/
-Disallow: /dashboard/
-Disallow: /login/
-Disallow: /checkout/
 
 Sitemap: https://tarjuman.org/sitemap-index.xml

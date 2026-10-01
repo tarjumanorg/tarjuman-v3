@@ -6,28 +6,21 @@ Our strategy is divided into two primary pillars:
 1.  **Traditional SEO (Search Engine Optimization):** Designed for Google crawlers to index our pages, generate rich snippets, and rank for visual search results (clicks).
 2.  **AEO (Answer Engine Optimization) & GEO (Generative Engine Optimization):** Designed for AI agents (ChatGPT, Gemini, Google AI Overviews, AutoGPT) that read the internet to answer user questions directly or extract data autonomously.
 
+Google states that AI Overviews and AI Mode need no special markup or files; SEO fundamentals are what count. Nothing here is an AI-specific trick.
+
 ---
 
-## 1. Traditional SEO (`astro-seo`)
+## 1. Traditional SEO (`Head.astro`)
 
-We manage all traditional `<head>` metadata (Title, Meta Description, Canonical URLs, OpenGraph, Twitter Cards) using the `astro-seo` library.
+All `<head>` metadata (title, description, canonical, Open Graph, Twitter Cards) is rendered by `src/components/Head.astro`, which `src/layouts/Layout.astro` includes. Pages pass `title`, `description`, and optionally `image`, `imageAlt`, `type` to `Layout`.
 
-### How it Works
-The `<SEO />` component is injected globally into `src/layouts/Layout.astro`. It accepts a `Props` interface so that any specific page can override the default site-wide metadata.
+*   **Canonical:** built from `Astro.site` plus the normalised pathname (`canonicalPath` in `src/lib/site.ts`): no query string, no hash, no trailing slash (except `/`), no `.html`. Pages never pass a canonical.
+*   **No robots meta.** Indexing is controlled by a response header (section 6).
+*   **Defaults** live in `Layout.astro`; site constants (name, URL, logo, OG image and its 2715x1448 size) live in `src/lib/site.ts`.
 
-**Default Configuration (`src/layouts/Layout.astro`):**
-If a page does not pass specific SEO props, it relies on the global defaults:
-*   **Title:** "Tarjuman - Jasa Penerjemah Tersumpah Resmi"
-*   **Description:** General sworn translation pitch.
-*   **Image:** `https://tarjuman.org/og-image.webp` (Optimized WebP file)
-
-**Page-Level Overrides (e.g., `src/pages/beasiswa-saudi.astro`):**
-When creating a new page, pass the `title` and `description` props manually into the Layout to target specific keywords.
+**Page-level overrides (e.g., `src/pages/beasiswa-saudi.astro`):**
 ```astro
----
-import Layout from "../layouts/Layout.astro";
----
-<Layout 
+<Layout
     title="Syarat & Checklist Dokumen Pendaftaran Beasiswa Arab Saudi 2026"
     description="Persiapkan dokumen terjemah ijazah & transkrip untuk Study in Saudi 2026..."
 >
@@ -37,57 +30,33 @@ import Layout from "../layouts/Layout.astro";
 
 ### How to Tweak:
 *   To change the default fallback meta descriptions, edit `src/layouts/Layout.astro`.
-*   To change a specific page's meta description, edit the `<Layout title="..." description="...">` tags on that specific `.astro` file.
-*   To update the social media preview image, replace `public/og-image.webp` with a new `1200x630` optimized WebP image.
+*   To change a specific page's meta description, edit the `<Layout title="..." description="...">` tags on that page.
+*   To change the social preview image, replace `public/og-image.webp` and update `ogImage`, `ogImageWidth`, `ogImageHeight` in `src/lib/site.ts`.
 
 ---
 
 ## 2. AEO (Answer Engine Optimization) via JSON-LD
 
-AI models rely heavily on Structured Data (JSON-LD) to understand the "Entities" on a page. Rather than parsing messy HTML divs, JSON-LD feeds data to Google AI and ChatGPT in a clean, mathematical dictionary format.
+AI models rely heavily on Structured Data (JSON-LD) to understand the "Entities" on a page.
 
-### How it Works (`src/components/StructuredData.astro`)
-This is a custom Astro component that safely injects raw JSON into the `<head>` of the document.
+### How it Works
+`src/components/JsonLd.astro` takes a `graph` array and emits one `application/ld+json` script (`@context` plus `@graph`) through `serializeJsonLd` (`src/lib/json-ld.ts`), which escapes `<` so database text cannot close the script tag. Shared nodes and builders live in `src/lib/site.ts` and are covered by `npm test`.
 
-**Component Implementation:**
-```astro
----
-export interface Props {
-    type: "FAQPage" | "LocalBusiness" | "Article" | "WebSite";
-    data: any;
-}
-const { type, data } = Astro.props;
----
-<script type="application/ld+json" set:html={JSON.stringify(data)} />
-```
+### Schemas We Use
+1.  **Homepage:** `Organization`, `WebSite`, `Service` (one `Offer` per `PRICING_TIERS` entry, so prices and days never drift from the pricing source). There is no `LocalBusiness`: Tarjuman has no public storefront. Add one with a real address only if a verified Google Business Profile exists.
+2.  **`/beasiswa-saudi`:** `Organization`, `Article`, `FAQPage`, `BreadcrumbList`. FAQ answers come from the single `faqItems` list in the page, which also renders the visible accordion. Google restricts FAQ rich results to government and health sites, so this is for consistency and agents, not a rich result.
+3.  Privacy and terms have no structured data.
 
-### Schemas We Use:
-1.  **`LocalBusiness` (Homepage):** Defines Tarjuman's brand, URL, image, and most importantly, our **price range** (`Rp75.000 - Rp300.000`).
-2.  **`FAQPage` (Scholarship Page):** Wraps our "Frequently Asked Questions" into a strict Q&A format. When a user asks Google "Apakah dokumen beasiswa saudi wajib diterjemahkan tersumpah?", Google AI Overview extracts the answer directly from this JSON-LD block.
-3.  **`Article` (Scholarship Page):** Defines the scholarship guide as an educational article with a publish date and author.
-
-### How to Tweak:
-*   Open the relevant page (e.g., `src/pages/index.astro`).
-*   Locate the JSON object at the top of the file (e.g., `const localBusinessData = { ... }` or `const faqSchema = { ... }`).
-*   Modify the text, update the prices, or add new FAQ array objects.
-*   The `StructuredData` component will automatically inject your updated JSON string into the HTML.
+### How to Tweak
+*   Change prices or processing days only in `src/lib/pricing.ts`; schema, FAQ answer and llms.txt follow.
+*   Bump `CONTENT_UPDATED` in `src/lib/site.ts` when the guide changes materially (it feeds `Article.dateModified`).
+*   Add or edit FAQ entries in `faqItems` in `src/pages/beasiswa-saudi.astro`.
 
 ---
 
 ## 3. Autonomous Agent Optimization (`llms.txt`)
 
-While chat interfaces use JSON-LD, autonomous AI scrapers (like AutoGPT) scanning the web for research often prefer highly dense, distraction-free markdown. We utilize the emerging `llms.txt` standard to feed them exclusively what they need.
-
-### How it Works
-We have a static markdown file located at `public/llms.txt`. 
-
-This file acts as a stripped-down, machine-readable manifest containing:
-*   Tarjuman's core focus (Sworn translation ID -> AR).
-*   Our precise Pricing Matrix formatted as a clear Markdown Table.
-*   The exact required documents for the Saudi Scholarship.
-
-### How to Tweak:
-*   If our pricing changes, or if Saudi Arabia introduces a new document requirement (e.g., a new medical test), you **must** update `public/llms.txt` in addition to updating the visual React/Svelte components. This ensures AI agents don't scrape and regurgitate outdated pricing.
+`/llms.txt` is generated by `src/pages/llms.txt.ts` (there is no static file). It follows llmstxt.org: an H1, a blockquote summary, and H2 sections. The `Pages` section lists the public pages as links; the pricing table comes from `PRICING_TIERS` and the document requirements from the `scholarship_requirements` table, so nothing needs to be edited by hand when prices or requirements change. Add new public pages to the `Pages` list. The response is cached for an hour. Google states llms.txt has no effect on Search; it exists for other agents and the Lighthouse audit.
 
 ---
 
@@ -100,17 +69,41 @@ To ensure AI crawlers can still understand our visual UI, we follow strict Seman
 *   Use `<article>` around self-contained content (like blog posts or the main guide).
 *   Use `<aside>` for loosely related content (like the Promo Banner or the Calculator widget).
 *   Use `<section>` to break up distinct topics on the same page.
-*   Maintain a strict Headings hierarchy (`H1` -> `H2` -> `H3`). Never skip heading levels.
+*   Maintain a strict Headings hierarchy (`H1` -> `H2` -> `H3`). Never skip heading levels (the footer column titles are `H2`).
+*   Every form control needs an accessible name (for example the hidden file input in the dropzone has an `aria-label`).
 
 ---
 
 ## 5. Automated XML Sitemap
 
-We use `@astrojs/sitemap` to ensure search engines are instantly notified when we add new pages.
+We use `@astrojs/sitemap` to ensure search engines are notified of new pages.
 
 ### How it Works
-During the `npm run build` process, Astro crawls the `src/pages/` directory and generates `dist/sitemap-index.xml` and `dist/sitemap-0.xml`.
+During `npm run build`, Astro generates `dist/sitemap-index.xml` and `dist/sitemap-0.xml`. `trailingSlash` is `never`; the sitemap `serialize` hook in `astro.config.mjs` strips trailing slashes and `.html` and removes duplicates, and its `filter` excludes private paths using `src/lib/private-paths.ts`. After a build, `dist/sitemap-0.xml` URLs must equal the page canonicals (the root is listed as `https://tarjuman.org`, equivalent to `https://tarjuman.org/`).
 
 ### How to Tweak:
-*   The sitemap requires an absolute base URL. If the domain ever changes from `tarjuman.org`, you must update the `site` variable in `astro.config.mjs`.
-*   Note: You do not need to manually update the sitemap when creating new pages. The integration handles discovery automatically on every build.
+*   You do not need to update the sitemap when creating new pages.
+*   If the domain changes, update `site` in `astro.config.mjs` and `SITE.url` in `src/lib/site.ts`.
+
+---
+
+## 6. Indexing Rules
+
+`src/lib/private-paths.ts` holds the one list of private prefixes (`/login`, `/dashboard`, `/orders`, `/payment`, `/checkout`, `/maintenance`, `/admin`, `/api`). Matching is segment-aware (`/orders-archive` is public). `src/middleware.ts` adds `X-Robots-Tag: noindex, nofollow` to every response on those paths (HTML, redirects and JSON). `public/robots.txt` disallows only `/api/` and `/admin/`: the other private paths must stay crawlable so Google can read the header. Add a new private area by adding its prefix to the shared list.
+
+---
+
+## 7. Rendering Model
+
+*   The site is server-rendered (`output: 'server'`). Only `/privacy` and `/terms` are prerendered (`export const prerender = true`): static HTML on Cloudflare Pages, excluded from the Worker by `_routes.json`, so middleware does not run for them at request time.
+*   **Navbar:** server-rendered pages use `src/components/NavbarAuth.astro`, which reads the user from `Astro.locals.user` (set by middleware) and looks up the role, then renders the presentational `Navbar.astro`. Prerendered pages cannot read the login cookie, so they pass `staticNav` to `Layout` and get a fixed guest navbar; a logged-in visitor on `/privacy` or `/terms` sees "Masuk". Do not prerender a page that needs to show login state. The mobile menu toggle is a delegated listener in `Layout.astro`.
+*   **No server islands** are used, so no `ASTRO_KEY` is needed. (An earlier design prerendered `/` with the navbar as a `server:defer` island; it was dropped because it required a stable `ASTRO_KEY` shared between build and runtime on Pages.)
+*   The site is a Cloudflare Pages project (`wrangler.jsonc` is ignored by Pages). `build.format: 'file'` makes Pages serve `/privacy` directly and redirect `/privacy/` and `/privacy.html` to it. Verify locally with `npx wrangler pages dev dist` (`astro preview` is not supported by the Cloudflare adapter).
+*   **Maintenance mode:** `PUBLIC_MAINTENANCE_MODE` is inlined at build, so toggling it is a redeploy. The prerendered `/privacy` and `/terms` ignore it (the middleware treats their `.html` build path as an asset and skips the redirect); that is acceptable for public legal pages. Every server-rendered page redirects at request time.
+*   Local `.env` may have `PUBLIC_MAINTENANCE_MODE=true`; override it for the shell (`$env:PUBLIC_MAINTENANCE_MODE = "false"`) before building to inspect the real site.
+
+---
+
+## 8. Verification Checklist
+
+`npx astro check`, `npx sv check`, `npm test`, then build and serve with `wrangler pages dev dist`: check one canonical per page, `X-Robots-Tag` on private paths only, every JSON-LD block parses, the sitemap equals the canonicals, and run Lighthouse on `/` and `/beasiswa-saudi`.

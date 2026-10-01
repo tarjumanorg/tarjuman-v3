@@ -1,0 +1,37 @@
+---
+import { SITE, canonicalPath } from "../lib/site.ts";
+
+export interface Props {
+	title: string;
+	description: string;
+	image?: string;
+	imageAlt?: string;
+	type?: string;
+}
+
+const { title, description, image = SITE.ogImage, imageAlt = title, type = "website" } = Astro.props;
+
+const canonical = new URL(canonicalPath(Astro.url.pathname), Astro.site).href;
+const isDefaultImage = image === SITE.ogImage;
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+
+<meta property="og:title" content={title} />
+<meta property="og:type" content={type} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={image} />
+{isDefaultImage && <meta property="og:image:width" content={String(SITE.ogImageWidth)} />}
+{isDefaultImage && <meta property="og:image:height" content={String(SITE.ogImageHeight)} />}
+<meta property="og:image:alt" content={imageAlt} />
+<meta property="og:description" content={description} />
+<meta property="og:locale" content={SITE.locale} />
+<meta property="og:site_name" content={SITE.name} />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={image} />
+<meta name="twitter:image:alt" content={imageAlt} />
