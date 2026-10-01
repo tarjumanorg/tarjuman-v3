@@ -124,3 +124,7 @@
     @apply bg-background text-foreground;
   }
 }
+/* The server island wrapper must not become the sticky navbar's containing block. */
+server-island {
+  display: contents;
+}
