@@ -154,9 +154,9 @@
 </script>
 
 {#if $orderStore.files.length > 0}
-    <div class="mt-8 space-y-8" transition:slide>
+    <div class="mt-8 flex flex-col gap-8" transition:slide>
         <!-- File List -->
-        <div class="space-y-4">
+        <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold">Dokumen Anda</h3>
                 <label
@@ -298,13 +298,13 @@
 
         <!-- Configuration -->
         <div
-            class="rounded-xl border bg-card p-6 space-y-8 shadow-sm transition-all duration-500 {$orderStore.urgencyDays ===
+            class="rounded-xl border bg-card p-6 flex flex-col gap-8 shadow-sm transition-all duration-500 {$orderStore.urgencyDays ===
             0
                 ? 'border-yellow-500/50 ring-4 ring-yellow-500/10 shadow-yellow-500/5'
                 : 'border-border'}"
         >
             <!-- Package Cards -->
-            <fieldset class="space-y-4">
+            <fieldset class="flex flex-col gap-4">
                 <legend
                     class="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-3"
                 >
@@ -406,7 +406,7 @@
                 {/if}
             </fieldset>
 
-            <div class="space-y-4 pt-4 border-t">
+            <div class="flex flex-col gap-4 pt-4 border-t">
                 <div class="flex items-start gap-4">
                     <div class="flex items-center h-6">
                         <Switch
@@ -415,7 +415,7 @@
                             onCheckedChange={(v: boolean) => toggleHardCopy(v)}
                         />
                     </div>
-                    <div class="text-sm space-y-1">
+                    <div class="text-sm flex flex-col gap-1">
                         <Label
                             for="hardCopy"
                             class="font-medium text-foreground text-base cursor-pointer"
