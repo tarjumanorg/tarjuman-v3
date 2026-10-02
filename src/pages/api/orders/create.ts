@@ -1,5 +1,7 @@
 
 import type { APIRoute } from "astro";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { SUPABASE_SERVICE_ROLE_KEY } from "astro:env/server";
 import { createClient } from "../../../lib/supabase";
 import { PRICING_TIERS, computeOrderPrice } from "../../../lib/pricing";
 
@@ -69,8 +71,19 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     const totalPages = files.reduce((acc: number, f: any) => acc + f.pageCount, 0);
     const finalPrice = computeOrderPrice(totalPages, tier.days, wantsHardCopy);
 
+    // Orders are written with the service role only; users have no INSERT
+    // grant on orders/order_files, so a price can't be set from the browser.
+    if (!SUPABASE_SERVICE_ROLE_KEY) {
+        console.error("SUPABASE_SERVICE_ROLE_KEY is not configured");
+        return fail(400, "Gagal membuat pesanan. Coba lagi.");
+    }
+    const adminSupabase = createSupabaseClient(
+        import.meta.env.PUBLIC_SUPABASE_URL,
+        SUPABASE_SERVICE_ROLE_KEY,
+    );
+
     // 3. Create Order
-    const { data: orderData, error: orderError } = await supabase
+    const { data: orderData, error: orderError } = await adminSupabase
         .from("orders")
         .insert({
             user_id: user.id,
@@ -100,7 +113,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
         file_type: "source",
     }));
 
-    const { error: filesError } = await supabase
+    const { error: filesError } = await adminSupabase
         .from("order_files")
         .insert(fileInserts);
 
