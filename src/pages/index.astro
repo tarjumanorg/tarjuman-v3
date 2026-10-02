@@ -4,10 +4,10 @@ import FileDropzone from "../components/FileDropzone.svelte";
 import OrderConfig from "../components/OrderConfig.svelte";
 import JsonLd from "../components/JsonLd.astro";
 import { organizationNode, websiteNode, serviceNode } from "../lib/site.ts";
-import { PRICING_TIERS, formatPrice } from "../lib/pricing";
+import { PRICING_TIERS, BASE_PRICE, formatPrice } from "../lib/pricing";
+import { Badge } from "../lib/components/ui/badge";
 
-const minPricePrice = Math.min(...PRICING_TIERS.map((t) => t.price));
-const minPriceString = formatPrice(minPricePrice)
+const minPriceString = formatPrice(BASE_PRICE)
 	.replace(",00", "")
 	.replace("Rp", "Rp ");
 
@@ -21,19 +21,6 @@ const seoData = {
 <Layout title={seoData.title} description={seoData.description}>
 	<JsonLd graph={[organizationNode(), websiteNode(), serviceNode()]} />
 	<main class="min-h-screen bg-background">
-		<!-- Promo Banner -->
-		<aside
-			class="bg-gradient-to-r from-primary/90 to-primary text-primary-foreground px-4 py-3 text-center"
-		>
-			<p class="text-sm font-medium">
-				🎉 <span class="font-bold">PROMO LAUNCH:</span> Gunakan kode <span
-					class="font-bold underline cursor-pointer bg-white/20 px-1.5 py-0.5 rounded ml-1 border border-white/30 hover:bg-white/30 transition-colors"
-					onclick="navigator.clipboard.writeText('LAUNCH50'); alert('Kode LAUNCH50 disalin!')"
-					>LAUNCH50</span
-				> untuk diskon 30% (Terbatas untuk 50 orang pertama!)
-			</p>
-		</aside>
-
 		<!-- Hero Section -->
 		<section class="relative overflow-hidden pt-4 pb-16 sm:pt-8 sm:pb-24">
 			<div
@@ -414,101 +401,41 @@ const seoData = {
 				<div
 					class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto mb-10"
 				>
-					<!-- Reguler -->
-					<div
-						class="relative flex flex-col rounded-2xl border bg-card p-6 shadow-sm hover:shadow-md transition-all duration-300"
-					>
-						<div class="flex items-center justify-between mb-4">
-							<span
-								class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700"
-								>Paling Hemat</span
+					{
+						PRICING_TIERS.map((tier) => (
+							<div
+								class:list={[
+									"relative flex flex-col rounded-2xl bg-card p-6 transition-all duration-300",
+									tier.id === "kilat" ? "border-2 border-amber-400 shadow-md hover:shadow-lg" : "border shadow-sm hover:shadow-md",
+									!tier.open && "opacity-60 bg-muted/50",
+								]}
 							>
-						</div>
-						<h3 class="text-lg font-bold mb-1">Reguler</h3>
-						<p class="text-muted-foreground text-sm mb-4">
-							9 Hari Kerja
-						</p>
-						<div class="mt-auto">
-							<p class="text-3xl font-bold text-foreground">
-								Rp 75.000
-							</p>
-							<p class="text-sm text-muted-foreground">
-								per halaman
-							</p>
-						</div>
-					</div>
-
-					<!-- Standar -->
-					<div
-						class="relative flex flex-col rounded-2xl border bg-card p-6 shadow-sm hover:shadow-md transition-all duration-300"
-					>
-						<div class="flex items-center justify-between mb-4">
-							<span
-								class="inline-flex items-center rounded-full bg-teal-100 px-3 py-1 text-xs font-medium text-teal-700"
-								>Standar</span
-							>
-						</div>
-						<h3 class="text-lg font-bold mb-1">Standar</h3>
-						<p class="text-muted-foreground text-sm mb-4">
-							5 Hari Kerja
-						</p>
-						<div class="mt-auto">
-							<p class="text-3xl font-bold text-foreground">
-								Rp 125.000
-							</p>
-							<p class="text-sm text-muted-foreground">
-								per halaman
-							</p>
-						</div>
-					</div>
-
-					<!-- Ekspres -->
-					<div
-						class="relative flex flex-col rounded-2xl border bg-card p-6 shadow-sm hover:shadow-md transition-all duration-300"
-					>
-						<div class="flex items-center justify-between mb-4">
-							<span
-								class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700"
-								>Prioritas</span
-							>
-						</div>
-						<h3 class="text-lg font-bold mb-1">Ekspres</h3>
-						<p class="text-muted-foreground text-sm mb-4">
-							2 Hari Kerja
-						</p>
-						<div class="mt-auto">
-							<p class="text-3xl font-bold text-foreground">
-								Rp 165.000
-							</p>
-							<p class="text-sm text-muted-foreground">
-								per halaman
-							</p>
-						</div>
-					</div>
-
-					<!-- Kilat -->
-					<div
-						class="relative flex flex-col rounded-2xl border-2 border-amber-400 bg-card p-6 shadow-md hover:shadow-lg transition-all duration-300"
-					>
-						<div class="flex items-center justify-between mb-4">
-							<span
-								class="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700"
-								>⚡ Super Urgent</span
-							>
-						</div>
-						<h3 class="text-lg font-bold mb-1">Kilat</h3>
-						<p class="text-muted-foreground text-sm mb-4">
-							1 Hari Kerja
-						</p>
-						<div class="mt-auto">
-							<p class="text-3xl font-bold text-foreground">
-								Rp 300.000
-							</p>
-							<p class="text-sm text-muted-foreground">
-								per halaman
-							</p>
-						</div>
-					</div>
+								<div class="flex items-center justify-between mb-4">
+									<Badge variant={tier.open ? "secondary" : "outline"}>
+										{tier.description}
+									</Badge>
+								</div>
+								<h3 class="text-lg font-bold mb-1">{tier.label}</h3>
+								<p class="text-muted-foreground text-sm mb-4">
+									{tier.days} Hari Kerja
+								</p>
+								<div class="mt-auto">
+									{tier.open ? (
+										<>
+											<p class="text-3xl font-bold text-foreground">
+												{formatPrice(tier.price)}
+											</p>
+											<p class="text-sm text-muted-foreground">per halaman</p>
+										</>
+									) : (
+										<p class="text-lg font-semibold text-muted-foreground">
+											Sedang ditutup
+										</p>
+									)}
+								</div>
+							</div>
+						))
+					}
 				</div>
 
 				<!-- Add-on & Notes -->
@@ -635,9 +562,9 @@ const seoData = {
 					class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-primary-foreground/20"
 				>
 					<div class="py-4 md:py-0">
-						<p class="text-3xl font-bold mb-2">{minPriceString}</p>
+						<p class="text-3xl font-bold mb-2">Harga Jelas</p>
 						<p class="text-primary-foreground/80 font-medium">
-							Harga Transparan per Halaman
+							Muncul Otomatis Setelah Upload
 						</p>
 					</div>
 					<div class="py-4 md:py-0">

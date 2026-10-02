@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { createClient } from "../lib/supabase";
-import { PRICING_TIERS, HARD_COPY_FEE } from "../lib/pricing";
+import { OPEN_TIERS, HARD_COPY_FEE } from "../lib/pricing";
 
 export const prerender = false;
 
@@ -26,7 +26,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect }) => {
 | :--- | :--- | :--- | :--- |
 `;
 
-    PRICING_TIERS.forEach(tier => {
+    OPEN_TIERS.forEach(tier => {
         // Formatting Rp xx,xxx
         const priceFormatted = new Intl.NumberFormat("id-ID", {
             style: "currency",

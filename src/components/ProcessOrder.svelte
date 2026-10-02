@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount, tick } from "svelte";
     import { get } from "svelte/store";
-    import { orderStore, totalPrice } from "../stores/orderStore";
+    import { orderStore } from "../stores/orderStore";
     import { createClient } from "../lib/supabase";
     import { restoreOrderState, clearOrderState } from "../lib/storage";
     import { Loader2, AlertCircle } from "lucide-svelte";
@@ -57,7 +57,6 @@
         }
 
         const currentOrder = get(orderStore);
-        const currentTotal = get(totalPrice);
 
         state = "uploading";
         const files = currentOrder.files;
@@ -90,7 +89,6 @@
                 urgencyDays: currentOrder.urgencyDays,
                 hardCopy: currentOrder.hardCopy,
                 hardCopyAddress: currentOrder.hardCopyAddress,
-                totalPrice: currentTotal,
             }),
         });
 

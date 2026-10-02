@@ -1,7 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import JsonLd from "../components/JsonLd.astro";
-import { articleNode, breadcrumbNode, faqNode, organizationNode } from "../lib/site.ts";
+import { articleNode, breadcrumbNode, faqNode, organizationNode, whatsappShareUrl } from "../lib/site.ts";
 import { createClient } from "../lib/supabase";
 import Calendar from "@lucide/astro/icons/calendar";
 import TriangleAlert from "@lucide/astro/icons/triangle-alert";
@@ -10,6 +10,7 @@ import CircleQuestionMark from "@lucide/astro/icons/circle-question-mark";
 import FileText from "@lucide/astro/icons/file-text";
 import Calculator from "@lucide/astro/icons/calculator";
 import ArrowRight from "@lucide/astro/icons/arrow-right";
+import Share2 from "@lucide/astro/icons/share-2";
 
 const supabase = createClient(Astro);
 
@@ -24,7 +25,7 @@ const currentYear = requirements?.[0]?.year ?? new Date().getFullYear();
 const requiredDocs = requirements?.filter((r) => r.is_required) ?? [];
 const optionalDocs = requirements?.filter((r) => !r.is_required) ?? [];
 
-import { BASE_PRICE, PRICING_TIERS, formatPrice } from "../lib/pricing";
+import { BASE_PRICE, OPEN_TIERS, formatPrice } from "../lib/pricing";
 
 // Estimate total pages for the widget
 const totalPagesMin = requiredDocs.reduce((sum, r) => sum + r.typical_pages, 0);
@@ -44,7 +45,7 @@ const faqItems = [
     },
     {
         question: "Berapa lama proses terjemahan selesai?",
-        answer: `Tarjuman menawarkan ${PRICING_TIERS.length} pilihan kecepatan, harga per halaman: ${PRICING_TIERS.map((t) => `${t.label} ${t.days} hari kerja (${formatPrice(t.price)})`).join(", ")}. Pesan jauh-jauh hari agar bisa memilih paket Reguler yang paling hemat.`,
+        answer: `Tarjuman menawarkan ${OPEN_TIERS.length} pilihan kecepatan, harga per halaman: ${OPEN_TIERS.map((t) => `${t.label} ${t.days} hari kerja (${formatPrice(t.price)})`).join(", ")}. Pesan jauh-jauh hari agar bisa memilih paket yang paling hemat.`,
     },
     {
         question: "Apakah perlu legalisir Kemenlu & Kemenkumham (Apostille)?",
@@ -416,7 +417,7 @@ const schemaGraph = [
                                         >
                                         <span
                                             class="text-[10px] text-muted-foreground uppercase tracking-wide"
-                                            >Tarif Reguler</span
+                                            >Tarif Standar</span
                                         >
                                     </div>
                                 </div>
@@ -430,15 +431,15 @@ const schemaGraph = [
                                 <ArrowRight class="w-4 h-4" />
                             </a>
 
-                            <p
-                                class="text-xs text-center text-muted-foreground"
+                            <a
+                                href={whatsappShareUrl("/beasiswa-saudi")}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="w-full flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-3 text-sm font-medium hover:bg-accent transition-colors"
                             >
-                                Diskon <strong>30%</strong> tersedia untuk pendaftar
-                                awal dengan kode <code
-                                    class="bg-muted px-1 py-0.5 rounded text-foreground font-mono"
-                                    >LAUNCH50</code
-                                >
-                            </p>
+                                <Share2 class="w-4 h-4" />
+                                Bagikan ke teman via WhatsApp
+                            </a>
                         </div>
                     </div>
 

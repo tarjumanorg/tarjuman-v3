@@ -1,11 +1,6 @@
 import localforage from "localforage";
-import {
-    orderStore,
-    promoCode,
-    promoDiscount,
-    promoApplied,
-    type FileItem,
-} from "../stores/orderStore";
+import { orderStore, type FileItem } from "../stores/orderStore";
+import { getTierByDays, DEFAULT_TIER } from "./pricing";
 
 const STORAGE_KEY = "tarjuman_order_state";
 
@@ -15,9 +10,6 @@ interface PersistedState {
     hardCopy: boolean;
     hardCopyAddress: string;
     timestamp: number;
-    promoCode?: string;
-    promoDiscount?: number;
-    promoApplied?: boolean;
 }
 
 export const storage = localforage.createInstance({
@@ -33,9 +25,6 @@ export async function saveOrderState() {
         hardCopy: currentState.hardCopy,
         hardCopyAddress: currentState.hardCopyAddress,
         timestamp: Date.now(),
-        promoCode: promoCode.get(),
-        promoDiscount: promoDiscount.get(),
-        promoApplied: promoApplied.get(),
     };
     await storage.setItem(STORAGE_KEY, stateToSave);
 }
@@ -54,16 +43,13 @@ export async function restoreOrderState() {
 
         orderStore.set({
             files: savedState.files,
-            urgencyDays: savedState.urgencyDays,
+            // Saved state may predate a tier being closed (e.g. Reguler).
+            urgencyDays: getTierByDays(savedState.urgencyDays).open
+                ? savedState.urgencyDays
+                : DEFAULT_TIER.days,
             hardCopy: savedState.hardCopy,
             hardCopyAddress: savedState.hardCopyAddress,
         });
-
-        if (savedState.promoApplied && savedState.promoCode) {
-            promoCode.set(savedState.promoCode);
-            promoDiscount.set(savedState.promoDiscount || 0);
-            promoApplied.set(true);
-        }
 
         return true;
     }
@@ -72,7 +58,4 @@ export async function restoreOrderState() {
 
 export async function clearOrderState() {
     await storage.removeItem(STORAGE_KEY);
-    promoCode.set("");
-    promoDiscount.set(0);
-    promoApplied.set(false);
 }
