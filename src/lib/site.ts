@@ -1,12 +1,12 @@
-import { PRICING_TIERS } from "./pricing.ts";
+import { OPEN_TIERS } from "./pricing.ts";
 
 export const SITE = {
 	name: "Tarjuman",
 	url: "https://tarjuman.org",
 	logo: "https://tarjuman.org/icon.png",
-	ogImage: "https://tarjuman.org/og-image.webp",
-	ogImageWidth: 2715,
-	ogImageHeight: 1448,
+	ogImage: "https://tarjuman.org/og-image.jpg",
+	ogImageWidth: 1200,
+	ogImageHeight: 640,
 	locale: "id_ID",
 } as const;
 
@@ -52,7 +52,7 @@ export function serviceNode() {
 		name: "Jasa Penerjemah Tersumpah Indonesia-Arab",
 		provider: { "@id": ORG_ID },
 		areaServed: { "@type": "Country", name: "Indonesia" },
-		offers: PRICING_TIERS.map((tier) => ({
+		offers: OPEN_TIERS.map((tier) => ({
 			"@type": "Offer",
 			name: tier.label,
 			description: `${tier.days} hari kerja, harga per halaman`,
@@ -102,4 +102,9 @@ export function articleNode(input: { headline: string; description: string; date
 		datePublished: input.datePublished,
 		dateModified: CONTENT_UPDATED,
 	};
+}
+
+export function whatsappShareUrl(path = "/") {
+	const text = `Butuh terjemah tersumpah Indonesia-Arab untuk beasiswa Study in Saudi? Cek Tarjuman: ${SITE.url}${path}`;
+	return `https://wa.me/?text=${encodeURIComponent(text)}`;
 }

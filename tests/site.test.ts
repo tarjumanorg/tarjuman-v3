@@ -4,7 +4,7 @@ import {
 	canonicalPath, organizationNode, websiteNode, serviceNode, breadcrumbNode, faqNode, articleNode,
 	ORG_ID, WEBSITE_ID, SERVICE_ID, SITE, CONTENT_UPDATED,
 } from "../src/lib/site.ts";
-import { PRICING_TIERS } from "../src/lib/pricing.ts";
+import { OPEN_TIERS } from "../src/lib/pricing.ts";
 
 test("canonicalPath drops trailing slash, .html, and keeps root", () => {
 	assert.equal(canonicalPath("/"), "/");
@@ -33,8 +33,8 @@ test("service has one IDR offer per pricing tier", () => {
 	const svc = serviceNode();
 	assert.equal(svc["@id"], SERVICE_ID);
 	assert.equal(svc.provider["@id"], ORG_ID);
-	assert.equal(svc.offers.length, PRICING_TIERS.length);
-	PRICING_TIERS.forEach((tier, i) => {
+	assert.equal(svc.offers.length, OPEN_TIERS.length);
+	OPEN_TIERS.forEach((tier, i) => {
 		assert.equal(svc.offers[i].priceCurrency, "IDR");
 		assert.equal(svc.offers[i].price, tier.price);
 		assert.equal(svc.offers[i].name, tier.label);

@@ -2,40 +2,23 @@
     import {
         orderStore,
         totalPrice,
-        originalPrice,
         removeFile,
         updatePageCount,
         setUrgency,
         toggleHardCopy,
         setAddress,
-        promoCode,
-        promoDiscount,
-        promoError,
-        promoLoading,
-        promoApplied,
-        applyPromoCode,
-        clearPromo,
     } from "../stores/orderStore";
     import {
         Trash2,
         FileText,
         MapPin,
-        Wallet,
-        Coins,
-        Coffee,
-        Armchair,
-        Bike,
         Car,
         Plane,
-        Rocket,
-        Zap,
         Siren,
+        Lock,
         Plus,
         Minus,
-        Tag,
-        X,
-        Check,
-        Loader2,
+        TriangleAlert,
     } from "lucide-svelte";
     import { fade, slide } from "svelte/transition";
     import { createClient } from "../lib/supabase";
@@ -46,57 +29,38 @@
         clearOrderState,
     } from "../lib/storage";
     import LoginModal from "./LoginModal.svelte";
-    import { Slider } from "../lib/components/ui/slider";
     import { Textarea } from "../lib/components/ui/textarea";
     import { Switch } from "../lib/components/ui/switch";
     import { Button } from "../lib/components/ui/button";
     import { Label } from "../lib/components/ui/label";
-    import { Input } from "../lib/components/ui/input";
+    import * as RadioGroup from "../lib/components/ui/radio-group";
+    import { Badge } from "../lib/components/ui/badge";
+    import * as Alert from "../lib/components/ui/alert";
     import { addDays, format } from "date-fns";
     import { id } from "date-fns/locale";
 
-    import { PRICING_TIERS, getTierByDays } from "../lib/pricing";
+    import {
+        PRICING_TIERS,
+        getTierByDays,
+        missesDeadline,
+        formatPrice,
+        STUDY_IN_SAUDI_DEADLINE,
+    } from "../lib/pricing";
 
     let isLoading = false;
     let isRestoring = true;
     let showLoginModal = false;
-    let promoInput = "";
 
-    // Map urgency (days) to slider index (0 = Reguler/Slowest, 3 = Kilat/Fastest)
-    // We reverse the array for display if we want Left=Cheap/Slow, Right=Expensive/Fast
-    // PRICING_TIERS is [Reguler(9), Standar(5), Ekspres(2), Kilat(1)]
-    // Index 0: Reguler (9 days)
-    // Index 1: Standar (5 days)
-    // Index 2: Ekspres (2 days)
-    // Index 3: Kilat (1 day)
+    $: activeTier = getTierByDays($orderStore.urgencyDays);
+    $: deliveryDate = addDays(new Date(), activeTier.days);
+    $: activeMissesDeadline = missesDeadline(activeTier);
 
-    $: activeTierIndex = PRICING_TIERS.findIndex(
-        (t) => t.days === $orderStore.urgencyDays,
-    );
-    $: activeTier = PRICING_TIERS[activeTierIndex] || PRICING_TIERS[0];
-
-    // Icon Mapping
     const TIER_ICONS = {
-        reguler: Wallet,
+        reguler: Lock,
         sedang: Car,
         ekspres: Plane,
         kilat: Siren,
-    };
-
-    // Helper to get color based on index
-    function getTierColor(index: number) {
-        // Budget -> Green, Mid -> Teal, Express -> Blue, Urgent -> Orange/Red
-        const colors = [
-            "rgb(22, 163, 74)", // Green-600 (Reguler)
-            "rgb(13, 148, 136)", // Teal-600 (Sedang)
-            "rgb(37, 99, 235)", // Blue-600 (Ekspres)
-            "rgb(234, 88, 12)", // Orange-600 (Kilat)
-        ];
-        return colors[index] || colors[0];
-    }
-
-    $: sliderColor = getTierColor(activeTierIndex);
-    $: deliveryDate = addDays(new Date(), activeTier.days);
+    } as const;
 
     onMount(async () => {
         // Try to restore state on load
@@ -105,14 +69,6 @@
         }
         isRestoring = false;
     });
-
-    function formatPrice(price: number) {
-        return new Intl.NumberFormat("id-ID", {
-            style: "currency",
-            currency: "IDR",
-            minimumFractionDigits: 0,
-        }).format(price);
-    }
 
     async function handlePayment() {
         isLoading = true;
@@ -167,7 +123,6 @@
                     urgencyDays: $orderStore.urgencyDays,
                     hardCopy: $orderStore.hardCopy,
                     hardCopyAddress: $orderStore.hardCopyAddress,
-                    totalPrice: $totalPrice,
                 }),
             });
 
@@ -348,84 +303,108 @@
                 ? 'border-yellow-500/50 ring-4 ring-yellow-500/10 shadow-yellow-500/5'
                 : 'border-border'}"
         >
-            <!-- Speed Slider -->
-            <div class="space-y-6" style="--primary: {sliderColor}">
-                <div
-                    class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4"
+            <!-- Package Cards -->
+            <fieldset class="space-y-4">
+                <legend
+                    class="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-3"
                 >
-                    <!-- Left: Package Selection -->
-                    <div class="space-y-1">
+                    Pilih Paket
+                </legend>
+
+                <RadioGroup.Root
+                    value={String($orderStore.urgencyDays)}
+                    onValueChange={(v: string) => setUrgency(Number(v))}
+                    class="grid grid-cols-2 sm:grid-cols-4 gap-3"
+                >
+                    {#each PRICING_TIERS as tier (tier.id)}
+                        {@const late = tier.open && missesDeadline(tier)}
                         <Label
-                            class="text-xs text-muted-foreground uppercase tracking-wide font-semibold"
+                            for="tier-{tier.id}"
+                            class="items-stretch flex-col gap-1 rounded-xl border bg-card p-3 sm:p-4 text-left font-normal leading-normal transition-colors has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5 has-[[data-state=checked]]:ring-2 has-[[data-state=checked]]:ring-primary/30 {tier.open
+                                ? 'cursor-pointer hover:border-primary/50'
+                                : 'cursor-not-allowed bg-muted/50 text-muted-foreground opacity-60'}"
                         >
-                            Pilih Paket
-                        </Label>
-                        <div class="flex items-center gap-3 text-primary">
-                            <div class="p-2 bg-primary/10 rounded-lg">
+                            <div class="flex items-center justify-between">
                                 <svelte:component
-                                    this={TIER_ICONS[activeTier.id]}
-                                    class="h-6 w-6 sm:h-8 sm:w-8"
+                                    this={TIER_ICONS[tier.id]}
+                                    class="size-5 {tier.open ? 'text-primary' : ''}"
+                                />
+                                <RadioGroup.Item
+                                    id="tier-{tier.id}"
+                                    value={String(tier.days)}
+                                    disabled={!tier.open}
+                                    aria-label={tier.label}
                                 />
                             </div>
-                            <span
-                                class="text-xl sm:text-2xl font-bold leading-none"
-                                >{activeTier.label}</span
+                            <span class="text-base font-bold text-foreground"
+                                >{tier.label}</span
                             >
-                        </div>
-                    </div>
-
-                    <!-- Right: Estimation -->
-                    <div class="text-left sm:text-right space-y-1">
-                        <Label
-                            class="text-xs text-muted-foreground uppercase tracking-wide font-semibold"
-                        >
-                            Estimasi Selesai
+                            <span class="text-xs text-muted-foreground">
+                                {tier.days === 1 ? "24 Jam" : `${tier.days} Hari`}
+                            </span>
+                            {#if tier.id === "sedang"}
+                                <Badge class="w-fit">Paling Dipilih</Badge>
+                            {:else if !tier.open}
+                                <Badge variant="secondary" class="w-fit"
+                                    >Ditutup</Badge
+                                >
+                            {/if}
+                            {#if tier.open}
+                                <span class="mt-1 text-lg font-bold text-foreground"
+                                    >{formatPrice(tier.price)}</span
+                                >
+                                <span class="text-[11px] text-muted-foreground"
+                                    >per halaman</span
+                                >
+                            {/if}
+                            {#if late}
+                                <span
+                                    class="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 dark:text-amber-400"
+                                >
+                                    <TriangleAlert class="size-3 shrink-0" />
+                                    Lewat batas 6 Okt
+                                </span>
+                            {/if}
                         </Label>
-                        <div class="flex flex-col sm:items-end">
-                            <p
-                                class="text-base sm:text-lg font-bold text-foreground capitalize leading-snug"
-                            >
-                                {format(deliveryDate, "EEEE, d MMMM yyyy", {
-                                    locale: id,
-                                })}
-                            </p>
-                            <p
-                                class="text-xs sm:text-sm font-medium text-muted-foreground"
-                            >
-                                {$orderStore.urgencyDays === 1
-                                    ? "24 Jam"
-                                    : `${$orderStore.urgencyDays} Hari`}
-                            </p>
-                        </div>
-                    </div>
+                    {/each}
+                </RadioGroup.Root>
+
+                <div
+                    class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-1"
+                >
+                    <Label
+                        class="text-xs text-muted-foreground uppercase tracking-wide font-semibold"
+                    >
+                        Estimasi Selesai
+                    </Label>
+                    <p
+                        class="text-base font-bold text-foreground capitalize leading-snug"
+                    >
+                        {format(deliveryDate, "EEEE, d MMMM yyyy", {
+                            locale: id,
+                        })}
+                    </p>
                 </div>
 
-                <div class="px-2 pt-4 flex items-center gap-4">
-                    <Wallet class="h-4 w-4 text-muted-foreground shrink-0" />
-                    <div class="flex-1">
-                        <Slider
-                            type="multiple"
-                            value={[activeTierIndex]}
-                            onValueChange={(v: number[]) => {
-                                if (v && v.length > 0) {
-                                    const tier = PRICING_TIERS[v[0]];
-                                    if (tier) setUrgency(tier.days);
-                                }
-                            }}
-                            min={0}
-                            max={3}
-                            step={1}
-                            class="cursor-pointer"
-                        />
+                {#if activeMissesDeadline}
+                    <div transition:slide>
+                        <Alert.Root
+                            class="border-amber-300 text-amber-900 dark:border-amber-800 dark:text-amber-200"
+                        >
+                            <TriangleAlert />
+                            <Alert.Description class="text-amber-900 dark:text-amber-200">
+                                Estimasi selesai paket ini melewati batas
+                                pendaftaran studyinsaudi ({format(
+                                    STUDY_IN_SAUDI_DEADLINE,
+                                    "d MMMM yyyy",
+                                    { locale: id },
+                                )}). Pilih Ekspres atau Kilat jika dokumen untuk
+                                beasiswa tersebut.
+                            </Alert.Description>
+                        </Alert.Root>
                     </div>
-                    <Zap
-                        class="h-4 w-4 shrink-0 transition-all duration-300 {$orderStore.urgencyDays ===
-                        1
-                            ? 'text-yellow-400 scale-125 [filter:drop-shadow(0_0_8px_#facc15)]'
-                            : 'text-muted-foreground opacity-50'}"
-                    />
-                </div>
-            </div>
+                {/if}
+            </fieldset>
 
             <div class="space-y-4 pt-4 border-t">
                 <div class="flex items-start gap-4">
@@ -477,66 +456,6 @@
             </div>
         </div>
 
-        <!-- Promo Code -->
-        <div class="rounded-xl border bg-card p-4 sm:p-6 shadow-sm">
-            <div class="flex items-center gap-2 mb-3">
-                <Tag class="h-4 w-4 text-primary" />
-                <Label class="text-sm font-semibold">Kode Promo</Label>
-            </div>
-
-            {#if $promoApplied}
-                <div
-                    class="flex items-center justify-between gap-2 rounded-lg border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30 p-3"
-                    transition:slide
-                >
-                    <div class="flex items-center gap-2">
-                        <Check class="h-4 w-4 text-green-600" />
-                        <span
-                            class="text-sm font-medium text-green-700 dark:text-green-400"
-                        >
-                            {$promoCode} — Diskon {$promoDiscount}%
-                        </span>
-                    </div>
-                    <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        class="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        onclick={clearPromo}
-                    >
-                        <X class="h-3.5 w-3.5" />
-                    </Button>
-                </div>
-            {:else}
-                <div class="flex gap-2">
-                    <Input
-                        placeholder="Masukkan kode promo"
-                        class="flex-1 uppercase"
-                        bind:value={promoInput}
-                        onkeydown={(e: KeyboardEvent) => {
-                            if (e.key === "Enter") applyPromoCode(promoInput);
-                        }}
-                    />
-                    <Button
-                        variant="outline"
-                        onclick={() => applyPromoCode(promoInput)}
-                        disabled={$promoLoading || !promoInput.trim()}
-                        class="shrink-0"
-                    >
-                        {#if $promoLoading}
-                            <Loader2 class="h-4 w-4 animate-spin" />
-                        {:else}
-                            Gunakan
-                        {/if}
-                    </Button>
-                </div>
-                {#if $promoError}
-                    <p class="text-xs text-destructive mt-2" transition:fade>
-                        {$promoError}
-                    </p>
-                {/if}
-            {/if}
-        </div>
-
         <!-- Sticky Footer for Mobile -->
         <div
             class="fixed bottom-0 left-0 right-0 p-4 bg-background border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] sm:static sm:bg-transparent sm:border-0 sm:shadow-none sm:p-0 z-50"
@@ -548,24 +467,9 @@
                     <p class="text-xs sm:text-sm text-muted-foreground">
                         Total Estimasi
                     </p>
-                    {#if $promoApplied}
-                        <div class="flex items-baseline gap-2">
-                            <p
-                                class="text-xl sm:text-3xl font-bold text-primary"
-                            >
-                                {formatPrice($totalPrice)}
-                            </p>
-                            <p
-                                class="text-sm text-muted-foreground line-through"
-                            >
-                                {formatPrice($originalPrice)}
-                            </p>
-                        </div>
-                    {:else}
-                        <p class="text-xl sm:text-3xl font-bold text-primary">
-                            {formatPrice($totalPrice)}
-                        </p>
-                    {/if}
+                    <p class="text-xl sm:text-3xl font-bold text-primary">
+                        {formatPrice($totalPrice)}
+                    </p>
                 </div>
                 <Button
                     size="lg"

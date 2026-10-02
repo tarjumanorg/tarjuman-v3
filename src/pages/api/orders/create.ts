@@ -1,6 +1,7 @@
 
 import type { APIRoute } from "astro";
 import { createClient } from "../../../lib/supabase";
+import { PRICING_TIERS, computeOrderPrice } from "../../../lib/pricing";
 
 export const prerender = false;
 
@@ -30,14 +31,43 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
         });
     }
 
-    const { files, urgencyDays, hardCopy, hardCopyAddress, totalPrice } = body;
+    // The client's price is ignored: the amount charged is always recomputed here.
+    const { files, urgencyDays, hardCopy, hardCopyAddress } = body ?? {};
 
-    if (!files || files.length === 0) {
-        return new Response(JSON.stringify({ error: "No files provided" }), {
-            status: 400,
+    const fail = (status: number, error: string) =>
+        new Response(JSON.stringify({ error }), {
+            status,
             headers: { "Content-Type": "application/json" },
         });
+
+    if (!Array.isArray(files) || files.length === 0) {
+        return fail(400, "No files provided");
     }
+
+    const validFiles = files.every(
+        (f: any) =>
+            typeof f?.path === "string" &&
+            f.path.startsWith(`${user.id}/`) &&
+            Number.isInteger(f.pageCount) &&
+            f.pageCount >= 1 &&
+            f.pageCount <= 500,
+    );
+    if (!validFiles) {
+        return fail(400, "Invalid files");
+    }
+
+    const tier = PRICING_TIERS.find((t) => t.days === urgencyDays);
+    if (!tier || !tier.open) {
+        return fail(400, "Paket pengerjaan ini sedang ditutup. Pilih paket lain.");
+    }
+
+    const wantsHardCopy = hardCopy === true;
+    if (wantsHardCopy && !(typeof hardCopyAddress === "string" && hardCopyAddress.trim())) {
+        return fail(400, "Alamat pengiriman hard copy wajib diisi.");
+    }
+
+    const totalPages = files.reduce((acc: number, f: any) => acc + f.pageCount, 0);
+    const finalPrice = computeOrderPrice(totalPages, tier.days, wantsHardCopy);
 
     // 3. Create Order
     const { data: orderData, error: orderError } = await supabase
@@ -45,21 +75,20 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
         .insert({
             user_id: user.id,
             status: "payment_pending", // Initial status
-            final_price: totalPrice,
-            urgency_days: urgencyDays,
-            physical_copy: hardCopy,
-            hard_copy_address: hardCopy ? hardCopyAddress : null,
-            page_count_estimated: files.reduce((acc: number, f: any) => acc + f.pageCount, 0),
+            original_price: finalPrice,
+            final_price: finalPrice,
+            urgency_days: tier.days,
+            physical_copy: wantsHardCopy,
+            hard_copy_address: wantsHardCopy ? hardCopyAddress.trim() : null,
+            page_count_estimated: totalPages,
         })
         .select()
         .single();
 
     if (orderError) {
         console.error("Order creation error:", orderError);
-        return new Response(JSON.stringify({ error: orderError.message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-        });
+        // Not 500: Cloudflare replaces 500/502/504 bodies with HTML (see pay.ts).
+        return fail(400, "Gagal membuat pesanan. Coba lagi.");
     }
 
     // 4. Create Order Files
@@ -78,10 +107,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     if (filesError) {
         console.error("Order files creation error:", filesError);
         // Ideally revert order here, but for now just error
-        return new Response(JSON.stringify({ error: filesError.message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-        });
+        return fail(400, "Gagal menyimpan dokumen. Coba lagi.");
     }
 
     return new Response(JSON.stringify({ order: orderData }), {

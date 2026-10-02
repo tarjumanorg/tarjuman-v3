@@ -1,5 +1,4 @@
-import { computed, map, atom } from 'nanostores';
-import { createClient } from '../lib/supabase';
+import { computed, map } from 'nanostores';
 
 export type FileItem = {
     id: string;
@@ -11,122 +10,25 @@ export type FileItem = {
 
 export type OrderState = {
     files: FileItem[];
-    urgencyDays: number; // 1 to 7
+    urgencyDays: number; // days of an open tier
     hardCopy: boolean;
     hardCopyAddress: string;
 };
 
-// Promo code state (separate atoms for reactivity)
-export const promoCode = atom('');
-export const promoDiscount = atom(0); // percentage, e.g. 30 = 30%
-export const promoError = atom('');
-export const promoLoading = atom(false);
-export const promoApplied = atom(false);
-
-import { getTierByDays, HARD_COPY_FEE } from '../lib/pricing';
+import { computeOrderPrice, DEFAULT_TIER } from '../lib/pricing';
 
 export const orderStore = map<OrderState>({
     files: [],
-    urgencyDays: 9, // Default to Budget (9 days)
+    urgencyDays: DEFAULT_TIER.days,
     hardCopy: false,
     hardCopyAddress: '',
 });
 
-// Computed total price (before discount)
-export const originalPrice = computed(orderStore, ({ files, urgencyDays, hardCopy }) => {
+// Display-only total; the order API recomputes the charged amount server-side.
+export const totalPrice = computed(orderStore, ({ files, urgencyDays, hardCopy }) => {
     const totalPages = files.reduce((acc, item) => acc + item.pageCount, 0);
-
-    // Calculate price per page based on tier
-    const tier = getTierByDays(urgencyDays);
-    const pricePerPage = tier.price;
-
-    let price = totalPages * pricePerPage;
-
-    if (hardCopy) {
-        price += HARD_COPY_FEE;
-    }
-
-    return Math.round(price);
+    return computeOrderPrice(totalPages, urgencyDays, hardCopy);
 });
-
-// Computed total price (with discount applied)
-export const totalPrice = computed([originalPrice, promoDiscount], (original, discount) => {
-    if (discount > 0) {
-        return Math.round(original * (1 - discount / 100));
-    }
-    return original;
-});
-
-// Promo code actions
-export const applyPromoCode = async (code: string) => {
-    const trimmed = code.trim().toUpperCase();
-    if (!trimmed) {
-        promoError.set('Masukkan kode promo');
-        return;
-    }
-
-    promoLoading.set(true);
-    promoError.set('');
-
-    try {
-        const supabase = createClient();
-        const { data, error } = await supabase
-            .from('promo_codes')
-            .select('*')
-            .eq('code', trimmed)
-            .eq('active', true)
-            .single();
-
-        if (error || !data) {
-            promoError.set('Kode promo tidak ditemukan');
-            promoDiscount.set(0);
-            promoApplied.set(false);
-            return;
-        }
-
-        // Check expiry
-        const now = new Date();
-        if (new Date(data.valid_from) > now) {
-            promoError.set('Kode promo belum berlaku');
-            promoDiscount.set(0);
-            promoApplied.set(false);
-            return;
-        }
-        if (new Date(data.valid_until) < now) {
-            promoError.set('Kode promo sudah kadaluarsa');
-            promoDiscount.set(0);
-            promoApplied.set(false);
-            return;
-        }
-
-        // Check usage limit
-        if (data.current_uses >= data.max_uses) {
-            promoError.set('Kuota promo sudah habis');
-            promoDiscount.set(0);
-            promoApplied.set(false);
-            return;
-        }
-
-        // Success
-        promoCode.set(trimmed);
-        promoDiscount.set(data.discount_percent);
-        promoApplied.set(true);
-        promoError.set('');
-    } catch {
-        promoError.set('Gagal memvalidasi kode promo');
-        promoDiscount.set(0);
-        promoApplied.set(false);
-    } finally {
-        promoLoading.set(false);
-    }
-};
-
-export const clearPromo = () => {
-    promoCode.set('');
-    promoDiscount.set(0);
-    promoError.set('');
-    promoApplied.set(false);
-};
 
 // Actions
 export const addFile = (fileItem: FileItem) => {
