@@ -456,9 +456,9 @@
             </div>
         </div>
 
-        <!-- Sticky Footer for Mobile -->
+        <!-- Checkout bar: fixed at every width; z-30 stays below the z-50 overlays (sheet, dialog, drawer) -->
         <div
-            class="fixed bottom-0 left-0 right-0 p-4 bg-background border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] sm:static sm:bg-transparent sm:border-0 sm:shadow-none sm:p-0 z-50"
+            class="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] backdrop-blur"
         >
             <div
                 class="container max-w-4xl mx-auto flex flex-row items-center justify-between gap-4"
@@ -487,8 +487,8 @@
                 </Button>
             </div>
         </div>
-        <!-- Spacer for mobile to prevent content being hidden behind footer -->
-        <div class="h-24 sm:hidden"></div>
+        <!-- Spacer so content isn't hidden behind the fixed bar -->
+        <div class="h-24"></div>
     </div>
 
     <LoginModal
