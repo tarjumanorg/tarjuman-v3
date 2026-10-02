@@ -32,6 +32,22 @@ const finalFiles =
         ? files.filter((f) => f.file_type === "final")
         : [];
 
+const isImage = (path: string) => /\.(jpe?g|png|webp|gif)$/i.test(path);
+
+// Private bucket: sign short-lived URLs so image uploads can render as thumbnails.
+const imagePaths = sourceFiles
+    .map((f) => f.file_path as string)
+    .filter(isImage);
+const thumbUrls = new Map<string, string>();
+if (imagePaths.length > 0) {
+    const { data: signed } = await supabase.storage
+        .from("uploads")
+        .createSignedUrls(imagePaths, 3600);
+    signed?.forEach((s) => {
+        if (s.path && s.signedUrl) thumbUrls.set(s.path, s.signedUrl);
+    });
+}
+
 function formatPrice(price: number) {
     return new Intl.NumberFormat("id-ID", {
         style: "currency",
@@ -232,14 +248,23 @@ function getStatusBadge(order: any) {
                     <h3 class="font-semibold text-foreground mb-4">
                         Dokumen Asli
                     </h3>
-                    <div class="space-y-3">
+                    <div class="flex flex-col gap-3">
                         {
                             sourceFiles.map((file: any) => (
                                     <div class="flex items-center justify-between p-3 rounded-lg border border-border bg-background">
                                         <div class="flex items-center gap-3 overflow-hidden">
-                                            <div class="h-8 w-8 rounded bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                                                PDF
-                                            </div>
+                                            {thumbUrls.get(file.file_path) ? (
+                                                <img
+                                                    src={thumbUrls.get(file.file_path)}
+                                                    alt={file.file_path.split("/").pop()}
+                                                    loading="lazy"
+                                                    class="size-12 shrink-0 rounded border border-border object-cover"
+                                                />
+                                            ) : (
+                                                <div class="size-12 shrink-0 rounded bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                                                    PDF
+                                                </div>
+                                            )}
                                             <div class="truncate">
                                                 <p
                                                     class="text-sm font-medium truncate max-w-[200px] sm:max-w-xs"
