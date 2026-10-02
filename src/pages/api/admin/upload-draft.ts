@@ -23,11 +23,20 @@ export const POST: APIRoute = async (context) => {
 
     if (uploadError) return new Response(uploadError.message, { status: 500 });
 
+    // order_files is written with the service role only; /api/admin is admin-gated by middleware.
+    if (!SUPABASE_SERVICE_ROLE_KEY) {
+        return new Response("Server configuration error", { status: 500 });
+    }
+    const adminSupabase = createSupabaseClient(
+        import.meta.env.PUBLIC_SUPABASE_URL,
+        SUPABASE_SERVICE_ROLE_KEY,
+    );
+
     // Public URL? Or Signed URL? For now, we assume user can access via logged-in check.
     // We just need to track the file in `order_files` or a separate column?
     // Let's use `order_files` table with type 'draft'.
 
-    const { error: dbError } = await supabase
+    const { error: dbError } = await adminSupabase
         .from("order_files")
         .insert({
             order_id: orderId,
@@ -37,14 +46,6 @@ export const POST: APIRoute = async (context) => {
         });
 
     if (dbError) return new Response(dbError.message, { status: 500 });
-
-    if (!SUPABASE_SERVICE_ROLE_KEY) {
-        return new Response("Server configuration error", { status: 500 });
-    }
-    const adminSupabase = createSupabaseClient(
-        import.meta.env.PUBLIC_SUPABASE_URL,
-        SUPABASE_SERVICE_ROLE_KEY,
-    );
 
     // Update Order Status to 'review'
     const { error: updateError } = await adminSupabase
