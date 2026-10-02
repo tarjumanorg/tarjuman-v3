@@ -1,3 +1,8 @@
 {
-  "enabledMcpjsonServers": ["supabase"]
+  "enabledMcpjsonServers": [
+    "supabase"
+  ],
+  "enabledPlugins": {
+    "web-quality-skills@addy-web-quality-skills": true
+  }
 }
